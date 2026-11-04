@@ -208,6 +208,33 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   the chapter colour; lying back it isn't drawn for the moment it passes edge-on, `SketchDrawer.Node.flips`); a held fold across the
   line moves 0's number and "$0" off the fold line to the side that stays down.
 
+- **Shared 3D for the paper lessons** (4 Nov; `App/PaperStand.swift`): a PaperLesson step says it stands (`stands(s)`: the pivot in
+  picture squares; `solid` true) and the paper tilts on the spring (`glide`, 0.9 s) to Unit cubes' view through the long lens (52°
+  up, +28°); the tilted view is worked out every frame from the flat camera (the pivot where the flat camera puts it, at its zoom),
+  so the flat camera keeps framing each step (keys, a new record line, pans and pinches) and the paper lies flat again when a step
+  stops standing (`lingers` keeps it up a moment) or the problem leaves. What rises is `PaperDrawing.solids` (`Solids`: faces that
+  fold on hinges with the spring, from an angle or over the paper; layers of cubes that rise; lines; labels standing on 3D points),
+  drawn in true 3D by `SolidsDrawer` in Volume of a box's colours (`CubesDrawer.looks`, `layerMesh`), shaded by the way each face
+  faces. Everything the lesson writes stands on a board facing the eye through the pivot, exactly where the flat paper has it
+  (`WorkProblem.board`); a lesson places words beside what stands with `s.standing(pivot).up(x, y, z)` (seen from where the camera
+  looks, `standEye`, so the long lens's growth near the eye is counted), and reads a drag up the screen as height with
+  `Standing.rise`. Taps on blocks land on the board, drags on the standing paper (`dragPoint`). Volume of a box keeps its own camera
+  flight and words (unchanged: before/after screenshots identical). Used by: Exponents and order (the cube stands up off the
+  paper), Lines of symmetry (the half is a real fold about the dashed line, the paper itself flat), Trapezoid (the copy swings half
+  a turn), Nets and Volume with fraction edges. `-showme` films Show me; `-slow N` films a tilt.
+- 6th grade chapter 7, Area and volume, is built (4 Nov; Core: `Area6` (`Para6`, `Tri6`, `Trap6`, `Poly6`, `Nets6`, `FracVol6`), tests
+  `AreaG6Tests`; App: `ParaLesson`, `TriLesson`, `TrapLesson`, `PolyLesson`, `NetsLesson`, `FracVolLesson`, their shared `AreaKit6`
+  (`A7`: shapes filled however they bend, faint unit squares cut to the outline, a height with its square corner, chords and splits)).
+  As the preview (`design/prototype/grade6-ch7.html`), grey second lines folded into the instructions. A check can read what the hands
+  kept (`AnswerTask.expectKept`, values as "kept.<name>"): Area of a polygon's record is written from the pieces the child cut.
+  Departures: Volume with fraction edges' write step says only "Write how many whole cubes." (the lit cube shows the 8; two rows of
+  words were 72%); a parallelogram's record goes beside it or under it, whichever shows it bigger; a net's record sits in the corner
+  its shape leaves (on two lines there when long), else beside or under; a net stands once a face is first taken hold of and stays
+  closed 1.2 s before it opens flat. Least zooms: 80%, 79%, 79%, 82%, 79%, 76% (Exponents 78%).
+- **The instruction is never a cut-off sliver** (call of 4 Nov, app-wide, `WorkProblem.keysFraming`): with the keys up, when the
+  instruction's rows aren't all on the screen, it's written just above the line being typed (as a miss is), or, while a miss shows
+  there, left out; back on its rows when the keys go.
+
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.

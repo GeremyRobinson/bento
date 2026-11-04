@@ -81,3 +81,5 @@ Every lesson built from now on (and the earlier ones when next touched) follows 
 
 8. **A miss line is never cut off.** With the keys up and the camera on the line being typed, what a miss says is written just
    above that line, inside the frame, from its left edge and wrapping to its width; it goes back to its rows when the keys go.
+9. **The instruction is never a cut-off sliver beside the keys.** With the keys up and its rows out of the frame, the instruction
+   is written just above the line being typed (when no miss line is showing), or not shown at all; never part of it.
