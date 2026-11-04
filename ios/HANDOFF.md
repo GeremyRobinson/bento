@@ -145,6 +145,27 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   subtracting's answer row). Shots e.g. `page-g6-longdiv-3 -numbers d=23,q=304,r=9 -wrong`, `page-g6-decaddsub-2 -numbers
   am=124,ap=1,bm=3875,bp=3,op=1 -wrong2`, `page-g6-decmult-2 -numbers am=425,ap=2,bm=36,bp=1,pt=1 -keypad`,
   `page-g6-decdiv-0 -numbers d=15,q100=650,s=1 -drag 22,10,17,10 -hold`.
+- **A miss line is never cut off** (call of 4 Nov, app-wide): with the keys up and the camera framed on the line being typed
+  (`WorkProblem.keysFraming`), what a miss says is written just above that line, inside the frame, from the line's left edge and
+  wrapping to its width (at least 16 squares), lifted above any record or picture words it would run into, on a paper plate only
+  where it lies over the picture; when the keys go it's back on rows 3–4. Where the usual rows still show beside the keys it stays
+  there. Checked on long division and multiplying decimals (`page-g6-decmult-2 … -wrong -keypad`). A lesson can keep part of its
+  picture in that frame (`PaperLesson.keysFocus`: Points in four quadrants keeps the point and its prints). A minus can be typed
+  into a box (the keys' "-" writes −; `LessonRun.type("−")` puts it first or takes it off).
+- 6th grade chapter 4, Negative numbers, is built (4 Nov; Core: `Negatives6` (`Neg6`, `Negatives6`, `Compare6`, `Distance6`,
+  `Quadrants6`, `Shapes6`), tests `NegativesG6Tests`; App: `NegativesLesson`, `CompareNegLesson`, `DistanceLesson`, `QuadrantsLesson`,
+  `PlaneShapesLesson`, their shared `NegativesKit6` (`N6.Line` a line through 0, `N6.Plane` four quadrants, points in three shades, and
+  **the fold**: `N6.Fold` + `N6.flap`, a sheet turned about a grid line drawn in perspective (`Sketch.lifted`), its plain back past
+  upright; let go past 100° it's checked and the half lies back on the paper's spring carrying what's on it (the grid's own lines,
+  strong ones on the block lines via `PaperState.gridTop`), the print fading in on the other side; let go short it falls back). As the
+  preview (`design/prototype/grade6-ch4.html`), the grey second lines folded into the instructions. Departures: the plane is −7 to 7
+  up (the design's −8 to 8 doesn't show at 75% under the words; every problem fits), Shapes on the plane writes its record beside the
+  plane in short lines (side; `Area = 9 × 5`, `= [45]`; perimeter over three lines) instead of under it; placing several points, corners
+  or brackets is one step (a wrong drop is checked at once, the point stays where it fell); the both-axes fold's second step says "Now
+  fold over the other axis."; the landed half lies straight back (the preview turns it to 180° first). Least zooms: 75% (upright line),
+  81%, 95%, 77%, 75%. Shots e.g. `page-g6-negatives-1 -numbers kind=2,n=9 -hand grab=1,sd=-1,g=12,th=1.1` (a fold held),
+  `page-g6-compare-2 -numbers kind=5,a=-8,b=-5 -hand grab=1,br=-8`, `page-g6-quadrants-2 -numbers x=4,y=-2,kind=3 -wrong`,
+  `page-g6-planeshapes-3 -numbers x1=-9,x2=9,y1=-6,y2=7,out=1,thing=1 -wrong -keypad`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
