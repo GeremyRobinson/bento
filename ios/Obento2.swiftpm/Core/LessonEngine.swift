@@ -497,6 +497,8 @@ public enum Lessons {
         TensHundreds.spec, ReadWriteBig.spec, CompareBig.spec, PlaceValueRound.spec, AddSubBig.spec,
         // 4th grade, Multiplying and dividing (3 Nov 2026)
         TimesAsMany.spec, MultiplyBig.spec, TwoByTwo.spec, DivideRemainders.spec, DivideBig.spec, StorySteps.spec,
+        // 4th grade, Factors and patterns (3 Nov 2026)
+        Factors.spec, PrimeComposite.spec, Patterns.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

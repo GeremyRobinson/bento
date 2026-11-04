@@ -92,6 +92,10 @@ extension Piece {
         case "g4-mult2x2": return [box(0, 0, 6, 4)]                             // tens × tens
         case "g4-divide", "g4-share": return [box(0, 3, 3, 1)]                  // one row's share
         case "g4-multistep": return [box(6, 4, 3, 2)]                           // the part taken away
+        // 4th grade, Factors and patterns (3 Nov)
+        case "g4-factors": return [box(0, 0, 6, 2)]                             // the first rectangle found
+        case "g4-prime": return [box(0, 0, 11, 1)]                              // the one long row
+        case "g4-patterns": return [box(8, 0, 1, 2)]                            // the newest squares
         default: return []
         }
     }
@@ -181,6 +185,15 @@ extension Piece {
             return [box(0, 0, 9, 2), line((0, 3), (9, 3)), line((0, 4), (9, 4)), line((0, 5), (9, 5)), line((0, 6), (9, 6))]
         case "g4-multistep": // three groups, and a part taken off the end: 9 by 6
             return bar(0, 0, 9, 3) + [box(0, 4, 9, 2), line((6, 4), (6, 6))]
+        case "g4-factors": // 12 squares as 2 rows of 6, and as 3 rows of 4: 6 by 6
+            return [box(0, 0, 6, 2), line((0, 1), (6, 1))] + (1...5).map { x in line((Double(x), 0), (Double(x), 2)) }
+                + [box(0, 3, 4, 3), line((0, 4), (4, 4)), line((0, 5), (4, 5))] + (1...3).map { x in line((Double(x), 3), (Double(x), 6)) }
+        case "g4-prime": // 11 squares in one long row, and two rows of 5 with one over: 11 by 6
+            return [box(0, 0, 11, 1)] + (1...10).map { x in line((Double(x), 0), (Double(x), 1)) }
+                + [box(0, 3, 5, 2), line((0, 4), (5, 4))] + (1...4).map { x in line((Double(x), 3), (Double(x), 5)) } + [box(0, 5, 1, 1)]
+        case "g4-patterns": // towers growing by 2: 9 by 6
+            return [box(0, 4, 1, 2), line((0, 5), (1, 5)), box(4, 2, 1, 4)] + (3...5).map { y in line((4, Double(y)), (5, Double(y))) }
+                + [box(8, 0, 1, 6)] + (1...5).map { y in line((8, Double(y)), (9, Double(y))) }
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

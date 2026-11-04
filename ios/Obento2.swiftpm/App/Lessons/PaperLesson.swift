@@ -101,6 +101,10 @@ enum PaperLessons {
         case "g4-divide": return DealLesson(big: false)
         case "g4-share": return DealLesson(big: true)
         case "g4-multistep": return StoryStepsLesson()
+        // 4th grade, Factors and patterns (3 Nov 2026)
+        case "g4-factors": return FactorsLesson()
+        case "g4-prime": return PrimeLesson()
+        case "g4-patterns": return PatternsLesson()
         default: return nil
         }
     }
