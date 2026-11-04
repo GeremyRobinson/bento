@@ -66,7 +66,7 @@ git history only). Claude leads the design (G, 20 Oct). `grade5.md` has every 5t
 
 Every lesson built from now on (and the earlier ones when next touched) follows these:
 
-1. **Numbers in a line are written tight.** In a record line, a readout, a label or a sentence, a number is one word ("10,935", "16", "$27", "0.51", "+20%", "a(n)"), right-aligned in the squares its digits would take so it stays on the grid. Only **column working** (a vertical sum, long division, a place chart) keeps one digit per 2 squares, because there the places must line up.
+1. **Numbers in a line are written tight.** In a record line, a readout, a label or a sentence, a number is one word ("10,935", "16", "$27", "0.51", "+20%", "a(n)"), laid out as words are: each number or sign takes the fewest whole squares its tight width fits, and the next one starts on the following square (so "7 × 10 = 70" has even gaps, never a wide hole after × or =). Only **column working** (a vertical sum, long division, a place chart) keeps one digit per 2 squares, because there the places must line up.
 2. **Coins keep their real colours**, faintly: the penny copper, the others silver. Telling coins apart is the maths here.
 3. **A grade's map shows only the chapters that are built.** Unbuilt chapters (and the grade test, until every chapter is built) stay off the map; the map grows as chapters land. No "Coming soon" cards.
 4. **Story numbers divide evenly into whole squares.** A sharing story's generator only picks amounts whose parts are whole squares, so no blank stretch is ever left.
