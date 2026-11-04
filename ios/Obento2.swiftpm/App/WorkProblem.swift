@@ -450,7 +450,11 @@ final class WorkProblem: Identifiable, PageProblem {
         // parts follow the finger)
         if let t, let g = ghost, let base = g.held, let p = g.dragPoint(at: g.time(t)), let paper {
             var held = s; held.hand = base
-            if let d = paper.hands(held)?.drag { s.hand = d(p, base) }
+            if let d = paper.hands(held)?.drag {
+                // a bending drag: the hand follows the places passed in turn, then the finger
+                let at = g.fired > 0 ? g.events[g.fired - 1].move : 0
+                s.hand = d(p, g.passed(at, at: g.time(t)).reduce(base) { d($1, $0) })
+            }
         }
         return s
     }
@@ -591,6 +595,17 @@ final class WorkProblem: Identifiable, PageProblem {
                     var s = ghostState(g); s.hand = base
                     if let h = paper.hands(s) {
                         let at = h.drag?(to, base) ?? base
+                        if let r = h.release { ghostApply(r(at), &g) }
+                    }
+                }
+                g.held = nil
+            case (.path(let pts), .grab):
+                if let paper, let from = pts.first, let held = paper.hands(ghostState(g))?.grab?(from) { g.held = held; g.hand = held }
+            case (.path(let pts), .release):
+                if let paper, let base = g.held {
+                    var s = ghostState(g); s.hand = base
+                    if let h = paper.hands(s) {
+                        let at = h.drag.map { d in pts.dropFirst().reduce(base) { d($1, $0) } } ?? base
                         if let r = h.release { ghostApply(r(at), &g) }
                     }
                 }

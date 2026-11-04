@@ -44,7 +44,7 @@ final class BigNumbersTests: XCTestCase {
         XCTAssertEqual(g5[0].lessons.map(\.id), ["g5-mult2", "g5-divide", "g5-order"])
         XCTAssertTrue(g5.allSatisfy(Curriculum.built))
         XCTAssertEqual(Curriculum.gradeTest(5), "test-grade")
-        // 4th grade: 8 chapters, 35 lessons; the first seven chapters built, the rest not yet
+        // 4th grade: 8 chapters, 35 lessons, every one built
         let g4 = Curriculum.chapters(4)
         XCTAssertEqual(g4.count, 8)
         XCTAssertEqual(g4.flatMap(\.lessons).count, 35)
@@ -57,7 +57,7 @@ final class BigNumbersTests: XCTestCase {
         XCTAssertTrue(Curriculum.built(g4[4]))
         XCTAssertTrue(Curriculum.built(g4[5]))
         XCTAssertTrue(Curriculum.built(g4[6]))
-        XCTAssertFalse(g4.dropFirst(7).contains(where: Curriculum.built))
+        XCTAssertTrue(g4.allSatisfy(Curriculum.built))
         XCTAssertEqual(Curriculum.gradeTest(4), "test-grade-4")
         XCTAssertTrue(Curriculum.isGradeTest("test-grade") && Curriculum.isGradeTest("test-grade-4"))
         // no id is on two grades: each grade's progress is its own

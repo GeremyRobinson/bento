@@ -26,6 +26,13 @@ struct GhostPlay {
     var fired = 0
     /// A drag under way: the hand state when it took hold.
     var held: Numbers?
+    /// A bending drag's places (GhostMove.path), by move, and when the finger reaches each.
+    private(set) var pathTimes: [Int: [Double]] = [:]
+    /// The places of a bending drag the finger has passed by `t` (the hand follows them in turn, as a finger's would).
+    func passed(_ move: Int, at t: Double) -> [CGPoint] {
+        guard case .path(let pts) = moves[move], let ts = pathTimes[move] else { return [] }
+        return zip(pts, ts).filter { $0.1 <= t }.map(\.0)
+    }
     /// When the last move is made, and when it's over (Show me: everything goes back then).
     private(set) var done = 0.0, end = 0.0
 
@@ -47,6 +54,17 @@ struct GhostPlay {
                 keys += [(t + Self.reach, .picture(from), false), (pressed, .picture(from), true), (letGo, .picture(to), true), (letGo + Self.lift, .picture(to), false)]
                 events += [(pressed, i, .grab), (letGo, i, .release)]
                 t = letGo + Self.lift
+            case .path(let pts):
+                // a drag that bends (an arm turned round a circle): through each place in turn, the finger down
+                guard let from = pts.first, let to = pts.last else { continue }
+                let pressed = t + Self.reach + Self.press
+                keys += [(t + Self.reach, .picture(from), false), (pressed, .picture(from), true)]
+                var at = pressed, times = [pressed]
+                for (a, b) in zip(pts, pts.dropFirst()) { at += min(0.5, max(0.12, hypot(b.x - a.x, b.y - a.y) * 0.03)); keys.append((at, .picture(b), true)); times.append(at) }
+                pathTimes[i] = times
+                keys.append((at + Self.lift, .picture(to), false))
+                events += [(pressed, i, .grab), (at, i, .release)]
+                t = at + Self.lift
             case .write(let box, _):
                 // a press in the box writes its number; the finger lifts away past the box's corner, so it shows
                 keys += [(t + Self.reach, .box(box), false), (t + Self.reach + Self.press, .box(box), true), (t + Self.reach + Self.press + Self.lift, .box(box), false),

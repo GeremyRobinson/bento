@@ -132,6 +132,13 @@ enum PaperLessons {
         case "g4-measure": return MeasureStoryLesson()
         case "g4-area": return AreaPerimLesson()
         case "g4-lineplot": return LinePlotLesson()
+        // 4th grade, Lines and shapes (3 Nov 2026)
+        case "g4-lines": return LinesLesson()
+        case "g4-turns": return TurnsLesson()
+        case "g4-protractor": return ProtractorLesson()
+        case "g4-angles": return AnglesAddLesson()
+        case "g4-classify": return ClassifyLesson()
+        case "g4-symmetry": return SymmetryLesson()
         default: return nil
         }
     }
@@ -237,6 +244,8 @@ enum GhostMove {
     case tap(GhostSpot)
     /// Press, drag (the live parts follow it), let go: from one place on the picture to another.
     case drag(from: CGPoint, to: CGPoint)
+    /// The same, through places in turn (a drag that bends round a circle).
+    case path([CGPoint])
     /// Into a record box: its number written.
     case write(box: String, text: String)
 }
