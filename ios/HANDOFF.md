@@ -70,6 +70,20 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   X's glide down from them. The preview's See stages (the bars counting on, the extra counting on, the half going round, the X's
   dropping) draw in at the start of the next step. Least zooms: 75%, 88%, 76%, 75%. Shots as before, e.g.
   `page-g4-convert-1 -numbers k=0,n=3,m=5,story=0`, `page-g4-area-0 -numbers l=5,w=3,fold=0 -drag 5,10,25,20`.
+- 4th grade chapter 8, Lines and shapes, is built (3 Nov; the last chapter: all 35 lessons of 4th grade are on the map; Core:
+  `Geometry4` (`Geo4`, `LinesRays`, `Turns4`, `Protractor4`, `AnglesAdd`, `Classify4`, `Symmetry4`); App: `LinesLesson`, `TurnsLesson`,
+  `ProtractorLesson`, `AnglesAddLesson`, `ClassifyLesson`, `SymmetryLesson`, their shared `GeoKit8` (`G8`: the page corner, the
+  protractor, arcs, wedges, arrowheads, choices in a row or a column, `placeRecord`)). Arms turned off the grid are drawn at their
+  true angle. A page corner lying on the picture is its edges only and the protractor's paper a band round its scales (fills that
+  overlap band on the iPad). The fold is drawn flat with the preview's perspective while it's dragged (the half lies over the paper
+  as plates and overLines), and lands or unfolds on the paper's spring (`Sketch.from`); the paper's own tilt stays for solids.
+  A ghost drag can bend (`GhostMove.path`: the arm turned round a circle). Least zooms: 75%, 75%, 81%, 81%, 78%, 78% (steep figures
+  26 squares, two lines on 40 × 22, the square 22 and the rectangle 26 × 14, so each shows at 75%). Shots as before, e.g.
+  `page-g4-lines-0 -numbers kind=2,item=1,turn=5`, `page-g4-symmetry-1 -numbers kind=0,shape=1,line=2 -wrong2`;
+  `map-started -grade 4 -whole` frames the whole grade (past the camera's least zoom, screenshots only).
+- Calls of 3 Nov (design/README.md, 6 and 7): a first miss rings only the general area, the exact spot comes with a second miss
+  on the step (`hint2: ["spot": 1]`, drawn behind `s.on("spot")`; `PaperState.at(hint:)` measures both) or Show me, in chapters
+  1–8; Converting measurements labels pieces of 4 squares or less only on the first and every 5th.
 - The keyboard never hides the work (3 Nov, app-wide): every keyboard notice counts (the system-hosted keys post only
   some), its frame is turned into the app's way up (the simulator holds the iPad portrait while the app is landscape, so
   the keys draw down the right side), and the camera frames into the room above, left or right of them

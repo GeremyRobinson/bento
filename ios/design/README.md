@@ -70,4 +70,9 @@ Every lesson built from now on (and the earlier ones when next touched) follows 
 2. **Coins keep their real colours**, faintly: the penny copper, the others silver. Telling coins apart is the maths here.
 3. **A grade's map shows only the chapters that are built.** Unbuilt chapters (and the grade test, until every chapter is built) stay off the map; the map grows as chapters land. No "Coming soon" cards.
 4. **Story numbers divide evenly into whole squares.** A sharing story's generator only picks amounts whose parts are whole squares, so no blank stretch is ever left.
+6. **A hint after a miss doesn't hand over the answer.** A first miss shows its line and at most rings the general area (the
+   right block, bar, side or column); the exact landing spot (a tick, a corner, a point, the answer's number) is shown only after
+   a second miss on the same step, or by Show me.
+7. **Crowded bars are labelled sparingly.** When a bar's pieces are small (a kilogram in 100 g pieces), only the first piece
+   and every 5th are labelled.
 5. Kept as they are: K Count to 100's whole-chart "see" moment at 66% (the one exception to 75%); K Teens and tens in the pink of 1st grade's Numbers to 120; the tracing band; Prime or composite leaving the last try's rows; each grade's first chapter free; a prime mark (′) drawn from a serif face so it doesn't read as an apostrophe; where a grade's design gives unequal axes for big values, follow the design.
