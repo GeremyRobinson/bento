@@ -27,6 +27,11 @@ public enum Spoken {
             guard let top = Int(m[1]), let bottom = Int(m[2]), let name = denominators[bottom] else { return "\(m[1]) over \(m[2])" }
             return "\(top) \(name)\(top == 1 ? "" : "s")"
         }
+        // a length's unit after its number: 7 cm → 7 centimeters, 1 in. → 1 inch ("4 in a row" stays)
+        for (u, one, many) in [("cm", "centimeter", "centimeters"), ("ft", "foot", "feet"), ("m", "meter", "meters"), ("in", "inch", "inches")] {
+            let after = u == "in" ? #"(?= long| more|[.,?]|$)"# : #"\b"#
+            out = replace(out, #"\b(\d+) "# + u + after) { $0[1] == "1" ? "1 \(one)" : "\($0[1]) \(many)" }
+        }
         // a lone ? (the story's unknown): "Put the ? on what we don't know."
         out = replace(out, #"(^|\s)\?(?=[\s.,]|$)"#) { "\($0[1])question mark" }
         while out.contains("  ") { out = out.replacingOccurrences(of: "  ", with: " ") }

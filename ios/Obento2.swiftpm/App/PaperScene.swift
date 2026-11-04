@@ -244,6 +244,11 @@ extension Piece {
         case "g2-evenodd": return [box(8.1, -0.1, 0.8, 0.8)]                    // the dot with no partner
         case "g2-arrays": return [box(2, 0, 6, 2)]                              // a row lit
         case "g2-squares": return [box(2, 0, 2, 2), box(6, 0, 2, 2), box(4, 2, 2, 2), box(2, 4, 2, 2), box(6, 4, 2, 2)] // the checker
+        // 2nd grade, Length (4 Nov)
+        case "g2-measure": return [box(1, 0.5, 6, 1)]                           // the pencil measured
+        case "g2-twounits": return [box(0, 0, 2.5, 1.2), box(0, 4.8, 1, 1.2)]    // an inch and a centimeter
+        case "g2-estimate": return [box(0, 2, 2, 0.6), box(4, 2, 2, 0.6)]        // the paper clips laid
+        case "g2-numline": return [box(0, 1, 7, 1.5)]                            // the length from 0
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -538,6 +543,28 @@ extension Piece {
                 return out
             default: // a start bar, a change joined at its end, the next one waiting under it: 10 by 6
                 return [box(0, 2, 6, 1.5), box(6, 2, 3, 1.5), line((3, 2), (3, 3.5)), box(0, 4.5, 4, 1.5), line((0, 1.5), (0, 6))]
+            }
+        case "g2-measure", "g2-twounits", "g2-estimate", "g2-numline":
+            func ticks(_ y: Double, _ step: Double, _ n: Int, _ h: Double) -> [[CGPoint]] { (0...n).map { i in line((Double(i) * step, y), (Double(i) * step, y + h)) } }
+            switch id {
+            case "g2-measure": // a pencil over a ruler, the hops between: 10 by 6
+                var out: [[CGPoint]] = [[P(1, 0.5), P(6, 0.5), P(7, 1), P(6, 1.5), P(1, 1.5), P(1, 0.5)], box(0, 3.5, 10, 2)]
+                out += ticks(3.5, 1, 10, 0.5)
+                for i in 1..<7 { let pts = (0...8).map { k -> CGPoint in let t = Double(k) / 8; return P(Double(i) + t, 3.5 - sin(.pi * t) * 0.5) }; out.append(pts) }
+                return out
+            case "g2-twounits": // an inch ruler over a key, a centimeter ruler under it: 10 by 6
+                var out: [[CGPoint]] = [box(0, 0, 10, 1.2), box(0.5, 2.4, 6, 1.2), box(0, 4.8, 10, 1.2)]
+                out += ticks(0.7, 2.5, 4, 0.5); out += ticks(4.8, 1, 10, 0.4)
+                return out
+            case "g2-estimate": // a paper clip, a pencil, clips laid along it: 10 by 6
+                var out: [[CGPoint]] = [box(0, 0, 2, 0.6), [P(0, 3.5), P(9, 3.5), P(10, 4), P(9, 4.5), P(0, 4.5), P(0, 3.5)]]
+                for j in 0..<5 { out.append(box(Double(j) * 2, 2, 2, 0.6)) }
+                return out
+            default: // a bar from 0 over a tape measure, hops back: 10 by 6
+                var out: [[CGPoint]] = [box(0, 1, 7, 1.5), line((0, 4.5), (10, 4.5))]
+                out += ticks(4.5, 1, 10, 0.4)
+                for (a, b) in [(7.0, 5.0), (5.0, 4.0)] { out.append((0...8).map { k -> CGPoint in let t = Double(k) / 8; return P(a + (b - a) * t, 4.5 - sin(.pi * t) * 0.8) }) }
+                return out
             }
         case "g2-evenodd", "g2-arrays", "g2-squares":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.4) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
