@@ -195,7 +195,8 @@ struct DealLesson: PaperLesson {
     }
 
     func recordBeside(_ n: Numbers) -> Double? { Self.top }
-    func messageRows(_ n: Numbers) -> Int { 2 }
+    /// Every slip fits one row across the chart and its record (a second row cost the chart its 75%).
+    func messageRows(_ n: Numbers) -> Int { 1 }
 
     func hands(_ s: PaperState) -> Hands? {
         guard stage(s) == 1 else { return nil }

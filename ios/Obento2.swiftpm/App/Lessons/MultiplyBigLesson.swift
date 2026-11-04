@@ -15,7 +15,10 @@ struct MultiplyBigLesson: PaperLesson {
     private static let dim = Sketch.Words(size: Sketch.small, weight: .medium, colour: .ink2)
 
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
-    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 ? 2 : 1, pr: 2, x0: x0, y0: y0) }
+    /// 2-square cells for three digits copied up to 3 times; more rows (or four digits) take 1-square cells, so the
+    /// chart and its record are seen at 75% or more (G 3 Nov: the camera rarely goes under 75%; at 2-square cells
+    /// 179 × 9 was seen at 57%).
+    static func chart(_ P: MultiplyBig.Parts) -> PlaceChart { PlaceChart(n: P.D, c: P.D == 3 && P.m <= 3 ? 2 : 1, pr: 2, x0: x0, y0: y0) }
     private func rows(_ s: PaperState, _ P: MultiplyBig.Parts) -> Int { stage(s) >= 2 ? P.m : Int((s.h("rows") ?? 1).rounded()) }
     private func handleY(_ ch: PlaceChart, _ rows: Int) -> Double { Self.y0 + Double(rows) * ch.c + 1 }
 
@@ -85,9 +88,12 @@ struct MultiplyBigLesson: PaperLesson {
     /// The record goes under the copies as they end up (m rows), not under the room the handle had.
     func recordRow(_ n: Numbers) -> Double? {
         let P = MultiplyBig.Parts(n), ch = Self.chart(P)
-        return Self.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : 3)
+        return Self.y0 + Double(P.m) * ch.c + 1 + (ch.c == 2 ? 4 : 2)
     }
-    func messageRows(_ n: Numbers) -> Int { 2 }
+    /// Every slip fits one row over the chart (a second row cost four-digit problems their 75%).
+    func messageRows(_ n: Numbers) -> Int { 1 }
+    /// With 1-square cells the chart is narrow: the record may go beside it (when that shows it bigger).
+    func recordBeside(_ n: Numbers) -> Double? { Self.chart(MultiplyBig.Parts(n)).c == 1 ? Self.top : nil }
 
     func hands(_ s: PaperState) -> Hands? {
         guard stage(s) == 1 else { return nil }

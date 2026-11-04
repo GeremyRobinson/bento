@@ -216,6 +216,36 @@ enum Shots {
                 for _ in 0..<60 { m.zoom(by: 1 / 1.015, at: .init(m.screen.width / 2, m.screen.height / 2)); try? await Task.sleep(for: .milliseconds(16)) }
                 return
             }
+            if name == "zooms" {
+                // -ids a,b,…: how big each lesson's problems show (the camera's zoom at each step), over many fresh
+                // problems at every index, written to Documents/zooms.txt: the least, and the problem it was on
+                let args = ProcessInfo.processInfo.arguments
+                let ids = args.firstIndex(of: "-ids").flatMap { $0 + 1 < args.count ? args[$0 + 1].split(separator: ",").map(String.init) : nil } ?? []
+                var out = ""
+                for id in ids {
+                    guard let spec = Lessons.spec(id) else { continue }
+                    var least = 9.0, worst = ""
+                    for index in 0..<12 {
+                        for seed in 0..<12 {
+                            var rng = SeededRandom(seed: UInt64(seed * 31 + index * 7 + 1))
+                            let run = LessonRun(spec, numbers: spec.generate(&rng, index), story: index % 4 == 3 && spec.story != nil)
+                            let w = WorkProblem(origin: Point(0, 0), chapter: .whole, instant: true, run: run, label: "")
+                            let zs = run.steps.indices.map { i in
+                                let f = ProblemGrid.stackedLayout(w, PaperState(run: run, index: 0).at(i, hint: false)).stack?.frame ?? .zero
+                                return (ProblemGrid.zoom(squares: f.width / Paper.cell, f.height / Paper.cell), f)
+                            }
+                            if let z = zs.map(\.0).min(), z < least {
+                                least = z
+                                worst = "i\(index) \(run.numbers.sorted { $0.key < $1.key }.map { "\($0.key)=\(Int($0.value))" }.joined(separator: ",")) steps " + zs.map { "\(Int(($0.0 * 100).rounded()))% \(Int($0.1.width / Paper.cell))x\(Int($0.1.height / Paper.cell))" }.joined(separator: " ")
+                            }
+                        }
+                    }
+                    out += "\(id) least \(Int((least * 100).rounded()))% at \(worst)\n"
+                }
+                let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("zooms.txt")
+                try? out.write(to: url, atomically: true, encoding: .utf8)
+                return
+            }
             if await structure(m, name) { return }
             defer { if ProcessInfo.processInfo.arguments.contains("-rotate") { rotate() } }
             m.shotMode = true

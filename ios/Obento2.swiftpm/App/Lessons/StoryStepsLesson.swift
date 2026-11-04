@@ -19,8 +19,11 @@ struct StoryStepsLesson: PaperLesson {
     /// The bars' lengths now (in squares, tens): the hand's while they're rounded, the rounded ones after.
     private func lengths(_ s: PaperState, _ P: StorySteps.Parts) -> (f: Double, c: Double, fd: Bool, cd: Bool) {
         if stage(s) >= 2 { return (Double(StorySteps.round10(P.first)) / 10, Double(StorySteps.round10(P.c)) / 10, true, true) }
-        return (s.h("f") ?? Double(P.first) / 10, s.h("c") ?? Double(P.c) / 10, (s.h("fd") ?? 0) != 0, (s.h("cd") ?? 0) != 0)
+        return (s.h("f") ?? Self.start(P.first), s.h("c") ?? Self.start(P.c), (s.h("fd") ?? 0) != 0, (s.h("cd") ?? 0) != 0)
     }
+    /// A bar's length before it's rounded: its whole tens (G 3 Nov: every bar starts on the grid; its name keeps its own
+    /// value), so 186 starts 18 squares long and is dragged to 19; 184 is let go where it is, at 18.
+    static func start(_ amount: Int) -> Double { Double(max(1, amount / 10)) }
     /// Where things sit for these lengths: the groups' end (or the whole), where the part starts and ends, the rest.
     private func geo(_ P: StorySteps.Parts, _ f: Double, _ c: Double) -> (g: Double, cStart: Double, cEnd: Double, rest: Double) {
         if P.share { return (f, f - c, f, f - c) }
@@ -74,7 +77,8 @@ struct StoryStepsLesson: PaperLesson {
             } else {
                 // the rest cut by the ruler into b equal parts; n is one (the preview's parts of the estimate's whole
                 // squares ran past the rest when it doesn't share evenly: 500 into 9 parts of 6 squares is 54)
-                let pw = G.rest / Double(P.b)
+                // each part whole squares (the rest's leftover squares stay in its dashed outline)
+                let pw = max(1, (G.rest / Double(P.b)).rounded(.down))
                 for j in 0..<P.b { dashed("sp\(j)", Double(j) * pw, y2, pw, j == 0 ? .ink : .ink3) }
                 pic.label("nl", "n", Self.named, .below, edge: y2 + H, along: pw / 2)
             }
@@ -100,7 +104,8 @@ struct StoryStepsLesson: PaperLesson {
         }
         // the answer, marked on n's bar near the end of its estimate
         if at >= 4 {
-            let x = Double(P.share ? P.n : P.n) / 10
+            // on the grid: the square line nearest the answer (its number says it exactly)
+            let x = (Double(P.n) / 10).rounded()
             pic.line("mark", [(x, y2 - 0.5), (x, y2 + H + 0.5)], .chapter)
             pic.word("markw", "\(P.n)", at: x, y2 - 1.2, Self.mark)
         }
@@ -128,7 +133,10 @@ struct StoryStepsLesson: PaperLesson {
                             extent: at == 1 ? pic.R(0, 0, min(64, most + 2), y2 + H + 2) : nil)
     }
 
-    func messageRows(_ n: Numbers) -> Int { 2 }
+    /// Every slip fits one row over the bars.
+    func messageRows(_ n: Numbers) -> Int { 1 }
+    /// A short picture (groups of under 100) leaves room at its right: the record may go beside it.
+    func recordBeside(_ n: Numbers) -> Double? { 0 }
 
     func hands(_ s: PaperState) -> Hands? {
         guard stage(s) == 1 else { return nil }
@@ -152,8 +160,9 @@ struct StoryStepsLesson: PaperLesson {
                 let which = Int((h["held"] ?? 0).rounded())
                 let key = which == 1 ? "f" : "c", amt = which == 1 ? P.first : P.c
                 // a tap: nothing moved
-                guard let len = h[key], len != (base[key] ?? Double(amt) / 10) else { out[key] = base[key]; return HandMove(hand: out, missHand: nil) }
-                let got = Int(len.rounded())
+                // a tap, nothing moved: right when it already ends at the nearest ten (184 at 18), else nothing
+                let len = h[key] ?? base[key] ?? Self.start(amt), got = Int(len.rounded())
+                if len == (base[key] ?? Self.start(amt)) && got * 10 != StorySteps.round10(amt) { out[key] = base[key]; return HandMove(hand: out, missHand: nil) }
                 if got * 10 == StorySteps.round10(amt) {
                     out[which == 1 ? "fd" : "cd"] = 1
                     let both = (out["fd"] ?? 0) != 0 && (out["cd"] ?? 0) != 0
@@ -171,9 +180,10 @@ struct StoryStepsLesson: PaperLesson {
         var moves: [GhostMove] = []
         let fR = P.share ? R(P.a) : R(P.b)
         if !L.fd { moves.append(.drag(from: CGPoint(x: P.share ? L.f : L.f, y: Self.y1 + Self.H / 2), to: CGPoint(x: fR, y: Self.y1 + Self.H / 2))) }
+        // (a bar already at its nearest ten is a drag that ends where it starts: pressed and let go)
         if !L.cd {
             // after the first: the groups at their rounded length
-            let g = P.share ? fR : Double(P.a) * fR, c = Double(P.c) / 10
+            let g = P.share ? fR : Double(P.a) * fR, c = Self.start(P.c)
             if P.kind == 1 { moves.append(.drag(from: CGPoint(x: g + c, y: Self.y1 + Self.H / 2), to: CGPoint(x: g + R(P.c), y: Self.y1 + Self.H / 2))) }
             else { moves.append(.drag(from: CGPoint(x: g - c, y: Self.y2 + Self.H / 2), to: CGPoint(x: g - R(P.c), y: Self.y2 + Self.H / 2))) }
         }
