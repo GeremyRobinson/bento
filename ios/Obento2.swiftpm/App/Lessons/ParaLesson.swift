@@ -22,10 +22,18 @@ struct ParaLesson: PaperLesson {
         let P: Para6.Parts
         init(_ n: Numbers) { P = Para6.Parts(n) }
         /// Two squares a unit when it's small enough to show that way with the record beside it at 75%, else one.
-        var U: Double { P.b + P.s <= 14 && P.h <= 12 && 4 * P.b + 40 <= 72 ? 2 : 1 }
+        var U: Double { P.b + P.s <= 14 && shows(2) >= 0.76 ? 2 : 1 }
+        /// How big the problem shows at `u` squares a unit, its record beside or under the picture.
+        func shows(_ u: Double) -> Double {
+            let span = max(b + s + 14 / u, 2 * b + 1) - min(0, s - b) + 2.5 / u, recW = M7.width(ParaLesson.record(P, .box("x", cells: 3))) + 1
+            let bx = span * u + 2
+            let beside = ProblemGrid.zoom(squares: bx + recW + 2.5, 6 + max(h * u + 2, 7) + 1)
+            let under = ProblemGrid.zoom(squares: max(span * u + 2.5, recW, 44), 6 + h * u + 17)
+            return max(beside, under)
+        }
         /// The record beside the picture, past where either piece can slide.
         var rx: Double { beside ? besideX : 0 }
-        var besideX: Double { ((X(P.lean > 0 ? max(b + s, 2 * b) : b + s) + 3) / 5).rounded(.up) * 5 }
+        var besideX: Double { ((X(max(b + s, 2 * b + 1)) + 2) / 5).rounded(.up) * 5 }
         var beside: Bool { besideX + M7.width(ParaLesson.record(P, .box("x", cells: 3))) + 1 - X(min(0, s - b)) + 2.5 <= 71 }
         var b: Double { Double(P.b) }
         var h: Double { Double(P.h) }

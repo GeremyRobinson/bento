@@ -31,7 +31,7 @@ struct FracVolLesson: PaperLesson {
                 let flat = ProblemGrid.zoom(squares: max(Double(P.x) * b + 18, 44), 6 + Double(P.y) * b + 4)
                 let rows = s.line(s.shareLine + 1) + 4
                 let up = ProblemGrid.zoom(squares: s.rx + 30, 6 + max(bx.height + 1, rows))
-                if min(flat, up) >= 0.75 { pick = b; break }
+                if min(flat, up) >= 0.79 { pick = b; break }
             }
             B = pick
             pivot = Shape(P: P, B: pick).pivot

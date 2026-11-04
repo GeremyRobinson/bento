@@ -30,13 +30,13 @@ struct NetsLesson: PaperLesson {
             var pick = 2.0
             let recW = M7.width(Shape.recordToks(N, nil)) + 1
             for u in [5.0, 4, 3, 2] {
-                let corner = Shape.corner(N, u), beside = corner != nil || N.width * u + 3 + recW <= 71
+                let corner = Shape.corner(N, u), beside = Shape(N: N, U: u, pivot: .zero).beside
                 let w = Shape.splits(N, u) ? { let (a, b) = Shape.split(N, nil); return max(M7.width(a), M7.width(b) + 8) + 1 }() : recW
                 let flat = beside ? ProblemGrid.zoom(squares: max((corner ?? ((N.width * u + 3) / 5).rounded(.up) * 5) + w, N.width * u, 44), 6 + max(N.height * u + 3, 9))
                     : ProblemGrid.zoom(squares: max(N.width * u, 44), 6 + N.height * u + 3 + 2 + 4)
                 let b = Shape.standingBounds(N, u)
-                let up = ProblemGrid.zoom(squares: max(b.width, 44), 6 + b.height + 6)
-                if min(flat, up) >= 0.75 { pick = u; break }
+                let up = ProblemGrid.zoom(squares: max(b.width + 14, 44), 6 + b.height + 6)
+                if min(flat, up) >= 0.79 { pick = u; break }
             }
             U = pick
             pivot = Shape(N: N, U: pick, pivot: .zero).pivotNow
@@ -76,7 +76,14 @@ struct NetsLesson: PaperLesson {
             return Standing.pivot(showing: allPoints, at: CGPoint(x: 0, y: 0), from: c)
         }
         /// The record beside the net when that shows it at 75% (a tall net), else under it.
-        var beside: Bool { Shape.corner(N, U) != nil || N.width * U + 3 + M7.width(Shape.recordToks(N, nil)) + 1 <= 71 }
+        var beside: Bool {
+            if Shape.corner(N, U) != nil { return true }
+            let w = M7.width(Shape.recordToks(N, nil)) + 1, x = ((N.width * U + 3) / 5).rounded(.up) * 5
+            // beside the net only when that shows it bigger than under it
+            let side = ProblemGrid.zoom(squares: x + w + 2, 6 + max(N.height * U + 3, 9))
+            let under = ProblemGrid.zoom(squares: max(N.width * U, w) + 2, 6 + N.height * U + 3 + 2 + 4)
+            return side > under
+        }
         var record: Double { beside ? 0 : N.height * U + 3 }
         var rx: Double { Shape.corner(N, U) ?? (beside ? ((N.width * U + 3) / 5).rounded(.up) * 5 : 0) }
         /// The record's column when it fits in the corner right of the net's top face, over the rest of the net (the
