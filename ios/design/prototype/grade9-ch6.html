@@ -1444,7 +1444,7 @@ function dsPicture(idx, P) {
       const st = this.stage, d = this.dr;
       this.floor = y0 + S + 2; this.right = RX + 24;   // the readout's room beside the picture
       sideLab("lt", kx, "above", y0, x0 + S / 2);
-      if (st === "cut") sideLab("ll", kx, "left", x0, y0 + S / 2); else sideLab("ll2", lin(k, -b), "left", x0, y0 + E / 2);   // once cut, the big piece is x − b tall
+      if (st === "cut") sideLab("ll", kx, "right", S, y0 + S / 2);   /* right of its edge, clear of the cut handle on the left */ else sideLab("ll2", lin(k, -b), "left", x0, y0 + E / 2);   // once cut, the big piece is x − b tall
       // break marks for each x along the top and down the side, inside the paper's L
       const zigs = (yTop, H, xa, W) => { let z = ""; for (let i = 0; i < k; i++) { const cx = xa + i * X + X / 2, h = cx > E ? Math.min(H, E - (yTop - y0)) : H; if (h > 0) z += `M${sq(cx + 0.35)} ${sq(yTop)}L${sq(cx - 0.35)} ${sq(yTop + h / 3)}L${sq(cx + 0.35)} ${sq(yTop + 2 * h / 3)}L${sq(cx - 0.35)} ${sq(yTop + h)}`; } return z; };
       const zagsA = (xa, W, yTop, H) => { let z = ""; for (let i = 0; i < k; i++) { const cy = yTop + i * X + X / 2; if (cy >= yTop + H) continue; const w = cy > y0 + E ? Math.min(W, E) : W; z += `M${sq(xa)} ${sq(cy + 0.35)}L${sq(xa + w / 3)} ${sq(cy - 0.35)}L${sq(xa + 2 * w / 3)} ${sq(cy + 0.35)}L${sq(xa + w)} ${sq(cy - 0.35)}`; } return z; };
