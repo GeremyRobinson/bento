@@ -55,6 +55,21 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   under it, `blocksAt` puts a story's choices in a column beside a tall picture. Least zooms: 81%, 75% (a story's pick),
   78%. Subtracting with too few pieces: the slide stops (a step, not a miss) and the next says "2 fifths can't take away
   4. Open a whole. Tap a whole bar."; a whole tapped first opens it straight away.
+- 4th grade chapter 6, Decimals, is built (3 Nov; Core: `Decimals4` (`Dec4`, `TenthsHundredths`, `DecimalLine`, `CompareDec4`);
+  App: `TenthsHundredthsLesson`, `DecimalLineLesson`, `CompareDec4Lesson`, their shared `DecimalsKit4` (`D6`: a whole 20 × 20,
+  a tenth a column, a hundredth 2 × 2); `F4.Tok.d` writes a decimal tight, `.fr` a fraction with 3-digit boxes). The
+  preview's grey second line is folded into each instruction. Least zooms: 75%, 81%, 76%. Shots as before, e.g.
+  `page-g4-decline-1 -numbers w=1,h=45,story=1,thing=1`, `page-g4-deccompare-0 -numbers w=0,a=50,b=45,pa=1,pb=2`.
+- The keyboard never hides the work (3 Nov, app-wide): every keyboard notice counts (the system-hosted keys post only
+  some), its frame is turned into the app's way up (the simulator holds the iPad portrait while the app is landscape, so
+  the keys draw down the right side), and the camera frames into the room above, left or right of them
+  (`PaperModel.room`): the whole problem at 75%+, else from its left edge through the record (70%+), else the whole
+  problem down to 50%, else the record, its boxes and Check (`WorkProblem.stageFrame`); it glides there and back.
+- Never remove an animation (3 Nov): a sketch part can morph (`Sketch.morphs`, or `from` to start a new part in another
+  shape) along a spring's path, and wait first (`Sketch.delay`); moved parts glide on the same spring. Chapter 5's whole
+  grows into pieces (`M5.opened`) and full bars shrink into wholes (`M5.closed`); Tenths and hundredths' poured
+  hundredths glide from where they were let go. `-slow N` runs the paper's clock N times slower from a shot's finger
+  move, to film it (screenshots in a loop).
 - The refined call 1 (3 Nov): a line's numbers and signs take the fewest whole squares they fit, centred, so gaps are
   even (`Record.width`, `Record.opWidth`, `F4.Tok`); a number typed into a box in a line is written tight, right-aligned
   with room for the cursor, the box the fewest whole squares that fit (`WorkBox.word`, `Record.boxWidth`). Boxes in
