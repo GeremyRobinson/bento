@@ -115,6 +115,20 @@ extension Piece {
         case "g4-measure": return []
         case "g4-area": return [box(0, 0, 6, 4)]                                // the square meters inside
         case "g4-lineplot": return [box(6, 2, 2, 2)]                            // the tallest stack's top X
+        // 4th grade, Lines and shapes (3 Nov)
+        case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
+            func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
+            func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
+                [q(cx, cy)] + (0...12).map { k in let a = (a0 + (a1 - a0) * Double(k) / 12) * .pi / 180; return q(cx + r * cos(a), cy - r * sin(a)) }
+            }
+            switch id {
+            case "g4-lines": return [pie(0.5, 1, 0.5, 0, 360)]                   // the endpoint
+            case "g4-turns": return [pie(3, 3, 3, 0, 90)]                         // a quarter turn
+            case "g4-protractor": return [pie(4.5, 5, 2, 0, 50)]                  // the angle measured
+            case "g4-angles": return [pie(0, 6, 3, 0, 35)]                        // the part we know
+            case "g4-classify": return [[q(0, 1), q(3, 1), q(3, 5), q(0, 5)].reversed()] // the shape sorted
+            default: return [[q(4.5, 0), q(9, 6), q(4.5, 6)]]                     // the half folded over
+            }
         default: return []
         }
     }
@@ -257,6 +271,24 @@ extension Piece {
                 for k in 0..<n { let y = 4.5 - 1.5 * Double(k); out.append(line((x - 0.5, y - 0.5), (x + 0.5, y + 0.5))); out.append(line((x - 0.5, y + 0.5), (x + 0.5, y - 0.5))) }
             }
             return out
+        case "g4-lines": // a ray: an endpoint, a point on it, an arrowhead: 11 by 2
+            let dot = (0...16).map { k -> CGPoint in let a = Double(k) / 16 * 2 * .pi; return P(0.5 + 0.5 * cos(a), 1 + 0.5 * sin(a)) }
+            return [dot, line((1, 1), (11, 1)), line((10, 0), (11, 1), (10, 2)), line((6, 0.6), (6, 1.4))]
+        case "g4-turns": // a circle, a fixed arm and an arm turned a quarter of the way round: 6 by 6
+            let ring = (0...32).map { k -> CGPoint in let a = Double(k) / 32 * 2 * .pi; return P(3 + 3 * cos(a), 3 + 3 * sin(a)) }
+            return [ring, line((3, 3), (6, 3)), line((3, 3), (3, 0))]
+        case "g4-protractor": // a protractor on an angle: its half circle, its ticks, the arm it reads: 9 by 5
+            let half = (0...24).map { k -> CGPoint in let a = Double(k) / 24 * .pi; return P(4.5 + 4.5 * cos(a), 5 - 4.5 * sin(a)) }
+            var out: [[CGPoint]] = [half + [P(9, 5)], line((4.5, 5), (4.5 + 5 * cos(50 * .pi / 180), 5 - 5 * sin(50 * .pi / 180)))]
+            for d in stride(from: 30.0, to: 180, by: 30) { let a = d * .pi / 180; out.append(line((4.5 + 4.5 * cos(a), 5 - 4.5 * sin(a)), (4.5 + 3.8 * cos(a), 5 - 3.8 * sin(a)))) }
+            return out
+        case "g4-angles": // a square corner with a part inside it: 9 by 6
+            return [line((0, 0), (0, 6), (9, 6)), line((0, 6), (9 * cos(35 * .pi / 180) * 0.95, 6 - 9 * sin(35 * .pi / 180) * 0.95)), line((0, 5), (1, 5), (1, 6))]
+        case "g4-classify": // a shape beside two overlapping loops: 11 by 6
+            func loop(_ cx: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + 2.5 * cos(a), 3 + 2.6 * sin(a)) } }
+            return [line((0, 1), (3, 1), (3, 5), (0, 5), (0, 1)), loop(6.5), loop(8.5)]
+        case "g4-symmetry": // a triangle with its line of symmetry: 9 by 6
+            return [line((4.5, 0), (9, 6), (0, 6), (4.5, 0)), line((4.5, 0), (4.5, 6))]
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6

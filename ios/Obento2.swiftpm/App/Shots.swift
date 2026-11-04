@@ -434,7 +434,13 @@ enum Shots {
         /// The map framed (today's chapter; `-whole`, or `-chapter=<n>`), and with `-select=<id>` that piece chosen, its
         /// tab saying Start, Continue or Go over.
         func frameMap() {
-            if let chapter { m.frameChapter(chapter) } else if args.contains("-whole") { m.frameAll() } else { m.frameGroup(duration: 0) }
+            if let chapter { m.frameChapter(chapter) }
+            else if args.contains("-whole") {
+                // the whole map, however tall: past the camera's least zoom when it must be (a picture of the whole grade)
+                let r = Map.shownBounds, sw = m.screen.width, sh = m.screen.height - PaperModel.chrome.top - PaperModel.chrome.bottom
+                let z = min(1.4, (sw - 80) / r.width, (sh - 80) / r.height), c = r.mid
+                m.fly(to: PaperCamera(x: sw / 2 - c.x * z, y: sh / 2 - c.y * z + PaperModel.chrome.top, zoom: z), duration: 0)
+            } else { m.frameGroup(duration: 0) }
             if let id = args.first(where: { $0.hasPrefix("-select=") }).map({ String($0.dropFirst(8)) }), let p = Map.piece(id) { m.select(p) }
         }
         /// The lesson named after the moment's kind ("plan-partway-g5-round" → g5-round).
