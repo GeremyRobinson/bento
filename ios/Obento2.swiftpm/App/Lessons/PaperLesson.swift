@@ -145,6 +145,10 @@ enum PaperLessons {
         case "g6-rate": return UnitRateLesson()
         case "g6-pctof": return PercentOfLesson()
         case "g6-pctwhole": return PercentWholeLesson()
+        // 6th grade, Factors and fractions (3 Nov 2026)
+        case "g6-lcm": return LcmLesson()
+        case "g6-gcf": return GcfLesson()
+        case "g6-divide": return DivideFractionsLesson()
         default: return nil
         }
     }

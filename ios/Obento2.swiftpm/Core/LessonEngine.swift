@@ -511,6 +511,8 @@ public enum Lessons {
         LinesRays.spec, Turns4.spec, Protractor4.spec, AnglesAdd.spec, Classify4.spec, Symmetry4.spec,
         // 6th grade, Ratios and percents (3 Nov 2026)
         EquivRatio.spec, RatioTable.spec, UnitRate.spec, PercentOf.spec, PercentWhole.spec,
+        // 6th grade, Factors and fractions (3 Nov 2026)
+        Lcm6.spec, Gcf6.spec, DivideFrac6.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

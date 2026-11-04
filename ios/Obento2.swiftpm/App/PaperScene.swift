@@ -123,6 +123,11 @@ extension Piece {
         case "g6-rate": return [box(6, 0, 3, 1)]                                // the row copied
         case "g6-pctof": return [box(0, 2, 3, 2)]                               // 30% shaded
         case "g6-pctwhole": return [box(0, 2, 3, 2)]                            // the block known
+        // 6th grade, Factors and fractions (3 Nov)
+        case "g6-lcm":                                                          // where both counts land
+            return [(0..<16).map { k in let a = Double(k) / 16 * 2 * .pi; return CGPoint(x: at.x + (6 + 0.6 * cos(a)) * c, y: at.y + (2 + 0.6 * sin(a)) * c) }]
+        case "g6-gcf": return [box(0, 0, 3, 2), box(0, 4, 3, 2)]                // a piece of each bar
+        case "g6-divide": return [box(0, 0, 8, 2)]                              // the amount laid along
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -211,6 +216,13 @@ extension Piece {
                 + [box(6, 0, 3, 6), line((7, 0), (7, 6)), line((8, 0), (8, 6))] + (1...5).map { y in line((6, Double(y)), (9, Double(y))) }
         case "g6-pctof": // a 0%–100% scale over a bar cut into tenths: 10 by 4
             return [line((0, 0), (0, 1), (10, 1), (10, 0)), line((5, 0.4), (5, 1)), box(0, 2, 10, 2)] + (1...9).map { x in line((Double(x), 2), (Double(x), 4)) }
+        case "g6-lcm": // a number line, hops of 3 above and of 2 under, meeting at 6: 7 by 4
+            return [line((0, 2), (7, 2))] + (0...7).map { x in line((Double(x), 2), (Double(x), 2.4)) }
+                + [arc(0, 3, 2, 1.6), arc(3, 6, 2, 1.6), arc(0, 2, 2, -1.6), arc(2, 4, 2, -1.6), arc(4, 6, 2, -1.6)]
+        case "g6-gcf": // two bars cut into the same pieces: 9 by 6
+            return [box(0, 0, 6, 2), line((3, 0), (3, 2)), box(0, 4, 9, 2), line((3, 4), (3, 6)), line((6, 4), (6, 6))]
+        case "g6-divide": // an amount, and pieces laid along under it, the last cut off at its end: 9 by 4
+            return [box(0, 0, 8, 2), box(0, 2, 3, 2), box(3, 2, 3, 2), line((6, 2), (9, 2), (9, 4), (6, 4)), line((8, 2), (8, 4))]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
