@@ -55,7 +55,7 @@ struct WriteNumbersLesson: PaperLesson {
             // the numeral glides up from its key to the writing place, growing, and waits there faint
             let i = P.choices.firstIndex(of: n) ?? 0, k0 = 0.16, from = key(P, i), w0 = 6 * Double(String(n).count) * k0
             let small = Numerals.strokes(n).map { st in st.map { (from.x - w0 / 2 + $0.x * k0, from.y - 0.8 + $0.y * k0) } }
-            KM.seeded(&pic, was: { p in for (j, st) in small.enumerated() { p.sketch.line("gh\(j)", KT.points(p, st), .chapter, width: 2) } }) { p in
+            KM.seeded(&pic, was: { p in for (j, st) in small.enumerated() { KT.strip(&p, "gh\(j)", st, upTo: st.count - 1, .tint(0.16), half: 0.6 * k0) } }) { p in
                 KT.band(&p, "gh", S)
             }
             let (si, pi) = stroke(s), grabbed = s.grabbed && s.h("dead") == nil
@@ -77,7 +77,7 @@ struct WriteNumbersLesson: PaperLesson {
             M7.row(&rec, "rec", [.n(n, .chapter), .w(n == 1 ? "dot" : "dots")], x: 0, line: 1)
         }
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes,
-                            extent: pic.R(0, 0, Self.wx + 6 * Double(String(n).count), wy(P) + 10))
+                            extent: pic.R(0, 0, Self.wx + 6 * Double(String(n).count) + 1, wy(P) + 10))
     }
 
     func hands(_ s: PaperState) -> Hands? {

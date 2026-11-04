@@ -61,16 +61,39 @@ enum KT {
     // MARK: numerals to trace
 
     /// A numeral's strokes as the paper's points.
-    static func points(_ pen: GridPen, _ stroke: [Numerals.Pt]) -> [CGPoint] { stroke.map { pen.P($0.x, $0.y) } }
-    /// The numeral waiting faint where it's traced: each stroke a wide pale band (1.2 squares).
+    /// Every third point and the last (the stroke's points are a fifth of a square apart: a line through all of them breaks up).
+    static func points(_ pen: GridPen, _ stroke: [Numerals.Pt]) -> [CGPoint] {
+        stroke.enumerated().filter { $0.offset % 3 == 0 || $0.offset == stroke.count - 1 }.map { pen.P($0.element.x, $0.element.y) }
+    }
+    /// The numeral waiting faint where it's traced: each stroke a pale band 1.2 squares wide with round ends.
     static func band(_ pen: inout GridPen, _ id: String, _ strokes: [[Numerals.Pt]], _ colour: Sketch.Colour = .tint(0.16)) {
-        for (i, s) in strokes.enumerated() { pen.sketch.line("\(id)\(i)", points(pen, s), colour, width: 24) }
+        for (i, s) in strokes.enumerated() { strip(&pen, "\(id)\(i)", s, upTo: s.count - 1, colour) }
     }
     /// The traced part of a stroke: the band darker and the line through it in the chapter's colour.
     static func ink(_ pen: inout GridPen, _ id: String, _ stroke: [Numerals.Pt], upTo k: Int) {
         guard k > 0 else { return }
-        let pts = points(pen, Array(stroke[0...min(k, stroke.count - 1)]))
-        pen.sketch.line(id + "b", pts, .tint(0.34), width: 24)
-        pen.sketch.line(id + "l", pts, .chapter, width: Sketch.stroke)
+        strip(&pen, id + "b", stroke, upTo: k, .tint(0.3))
+        pen.sketch.line(id + "l", points(pen, Array(stroke[0...min(k, stroke.count - 1)])), .chapter, width: Sketch.stroke)
+    }
+    /// A band along a stroke up to point k: quads edge to edge between the points (never over each other, so a pale band
+    /// is even all along, curves too), a half disc at each end.
+    static func strip(_ pen: inout GridPen, _ id: String, _ stroke: [Numerals.Pt], upTo k: Int, _ colour: Sketch.Colour, half h: Double = 0.6) {
+        let cut = Array(stroke[0...min(k, stroke.count - 1)])
+        let p = cut.enumerated().filter { $0.offset % 2 == 0 || $0.offset == cut.count - 1 }.map { CGPoint(x: $0.element.x, y: $0.element.y) }
+        guard p.count >= 2 else { return }
+        func unit(_ a: CGPoint, _ b: CGPoint) -> CGPoint { let d = hypot(b.x - a.x, b.y - a.y); return d > 0 ? CGPoint(x: (b.x - a.x) / d, y: (b.y - a.y) / d) : CGPoint(x: 1, y: 0) }
+        let dirs = p.indices.map { i in unit(p[max(0, i - 1)], p[min(p.count - 1, i + 1)]) }
+        let n = dirs.map { CGPoint(x: -$0.y, y: $0.x) }
+        for i in 0..<(p.count - 1) {
+            let q = [(p[i].x + n[i].x * h, p[i].y + n[i].y * h), (p[i + 1].x + n[i + 1].x * h, p[i + 1].y + n[i + 1].y * h),
+                     (p[i + 1].x - n[i + 1].x * h, p[i + 1].y - n[i + 1].y * h), (p[i].x - n[i].x * h, p[i].y - n[i].y * h)]
+            pen.sketch.polygon("\(id)q\(i)", q.map { pen.P($0.0, $0.1) }, colour)
+        }
+        // round ends: a half disc past each end
+        for (end, c, d) in [(0, p[0], CGPoint(x: -dirs[0].x, y: -dirs[0].y)), (1, p[p.count - 1], dirs[p.count - 1])] {
+            let a0 = atan2(d.y, d.x)
+            let arc = (0...10).map { j -> CGPoint in let a = a0 - .pi / 2 + .pi * Double(j) / 10; return pen.P(c.x + h * cos(a), c.y + h * sin(a)) }
+            pen.sketch.polygon("\(id)e\(end)", arc, colour)
+        }
     }
 }
