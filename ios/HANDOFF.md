@@ -407,6 +407,24 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   n0=0,n1=3,a=7,b=4 -drag 1,14.5,13,14.5 -hold`, `page-g1-time-1 -numbers hour=8,minute=30 -path 35,4.5,39,5,41,8,41,12,39,15 -hold`
   (`-showme -slow 3` films the ghost's trace), `page-g1-picgraph-0 -numbers theme=0,c0=8,c1=3,c2=5,ask=0,x=0,y=1,sort=1,seed=7 -tapsq
   3.5,23,7.5,23`, `page-g1-tally-0 -numbers theme=1,c0=12,c1=4,c2=9,ask=1,x=0,y=1 -tapsq 30,4.5`.
+- 1st grade chapter 6, Shapes and equal parts, is built (4 Nov; the last chapter: all 26 lessons and the 1st grade test are on the map;
+  Core: `Shapes1` (`WhatShape1` g1-shapes, `Compose1` g1-compose, `Build1` g1-build, `Halves1` g1-halves), tests `Shapes1Tests`; App:
+  `WhatShape1Lesson`, `Compose1Lesson`, `Build1Lesson` (3D on `PaperStand`, as K's Where is it?), `Halves1Lesson`). Geometry teal. As the
+  preview (`design/prototype/grade1-ch6.html`), its words, data and generators word for word; grey lines folded in ("There's a gap. Is it a
+  triangle?", "That side is curved. Is it a triangle?", "Draw a different triangle. Tap the corners. Tap the first one again to close it.",
+  "… Tap a piece to turn it." when a piece starts turned, "Fourths are also called quarters. Shade 3 fourths."). Time's minutes step now
+  says "Write the minutes." Departures, each for 75%: Yes / No in a column beside the shape (where the patch comes), the record two
+  squares under it with Next problem beside it; Compose's tray a block past the outline, rows wrap at 45 squares, Next beside the record;
+  Build's tray at most 5 blocks wide, the record beside what stands when it fits (else under, Next beside it); Halves' names and record
+  beside the shape for every shape; the compare kind's square and circle are 24 across (30 was 71%). Build: the pieces aren't drawn
+  rising (seen straight down the flat paper shows their footprints; the tilt lifts them); a box built of pieces turns into one box at
+  once (bodies have no fade); names stay under tray pieces while they wait. Hints: a first miss rings the shape, outline, ghost or
+  blocks; a second shows the next side dashed, the places dashed, the piece's place in the chapter colour, the cut, or the right block.
+  Least zooms: 76%, 75%, 76%, 77%. Shots e.g. `page-g1-shapes-0 -numbers kind=0,variant=0,miss=1,side=2,n=3,x0=0,y0=16,x1=20,y1=16,x2=8,y2=0
+  -path 0,16,10,16,20,16,14,8,8,0,4,8,0,16 -hold`, `page-g1-compose-0 -numbers set=0 -drag 30,5,5,5`, `page-g1-compose-1 -numbers set=6,u1=1`,
+  `page-g1-build-0 -numbers set=4,t0=0,t1=1 -wrong2`, `page-g1-build-0 -numbers set=4,t0=2,t1=1 -showme -slow 2`,
+  `page-g1-halves-0 -numbers shape=0,parts=4,cut=0,shaded=3 -drag 15,1,15,23 -hold`, `page-g1-halves-1 -numbers compare=1,shape=1,hcut=2,fcut=2`,
+  `map-fresh -grade 1 -whole`.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
