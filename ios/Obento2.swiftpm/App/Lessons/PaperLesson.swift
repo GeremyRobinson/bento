@@ -264,6 +264,7 @@ enum PaperLessons {
         // 1st grade, Length, time and graphs (4 Nov 2026)
         case "g1-order3": return Order1Lesson()
         case "g1-measure": return Cubes1Lesson()
+        case "g1-time": return Time1Lesson()
         default: return nil
         }
     }
