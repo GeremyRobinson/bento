@@ -159,6 +159,13 @@ extension Piece {
             case "g6-nets": return [box(3, 2, 3, 2)]                              // the base
             default: return [[q(1, 4), q(3, 4), q(3, 6), q(1, 6)]]                // a whole cube of small ones
             }
+        // 6th grade, Data (4 Nov)
+        case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
+        case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
+        case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
+        case "g6-mad": return [box(0, 1, 2, 1), box(6, 0, 2, 2)]                // what's over the mean
+        case "g6-median": return [box(5, 3, 1, 3)]                              // the middle bar, left standing
+        case "g6-boxplot": return [box(3, 1, 4, 4)]                             // the middle half
         case "g4-lines", "g4-turns", "g4-protractor", "g4-angles", "g4-classify", "g4-symmetry":
             func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
             func pie(_ cx: Double, _ cy: Double, _ r: Double, _ a0: Double, _ a1: Double) -> [CGPoint] {
@@ -312,6 +319,23 @@ extension Piece {
         case "g6-fracvol": // a box of small cubes standing, a whole one in its corner: 11 by 6
             return [box(1, 2, 6, 4), line((1, 2), (4, 0), (10, 0), (7, 2)), line((10, 0), (10, 4), (7, 6))]
                 + [3.0, 5].map { x in line((x, 2), (x, 6)) } + [line((1, 4), (7, 4))] + [line((2.5, 1), (8.5, 1))]
+        case "g6-dotplot": // dots stacked over a line with its ticks: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.5 * cos(a), y + 0.5 * sin(a)) } }
+            var out: [[CGPoint]] = [line((0, 6), (11, 6))]
+            for (x, n) in [(2.5, 2), (5.5, 4), (8.5, 1)] { for k in 0..<n { out.append(dot(x, 5.5 - Double(k))) } }
+            return out
+        case "g6-histogram": // bars side by side over an axis, counted up the side: 11 by 6
+            return [line((0, 0), (0, 6), (11, 6)), box(1, 4, 2, 2), box(3, 2, 2, 4), box(5, 1, 2, 5), box(7, 3, 2, 3), box(9, 5, 2, 1)]
+        case "g6-mean": // four bars and the level they share out to: 11 by 6
+            return [line((0, 6), (11, 6)), box(0, 0, 2, 6), box(3, 4, 2, 2), box(6, 2, 2, 4), box(9, 2, 2, 4), line((0, 2), (11, 2))]
+        case "g6-mad": // four bars and the mean's line across them: 11 by 6
+            return [line((0, 6), (11, 6)), box(0, 1, 2, 5), box(3, 3, 2, 3), box(6, 0, 2, 6), box(9, 4, 2, 2), line((0, 2), (11, 2))]
+        case "g6-median": // bars in order, crossed off from both ends, the middle one left: 11 by 6
+            var out: [[CGPoint]] = [line((0, 6), (11, 6))]
+            for (x, h) in [(1.0, 1.0), (3, 2), (5, 3), (7, 5), (9, 6)] { out.append(box(x, 6 - h, 1, h)); if x != 5 { out.append(line((x, 6), (x + 1, 6 - h))) } }
+            return out
+        case "g6-boxplot": // a box from one middle to the other, the median across it, whiskers to the ends: 11 by 6
+            return [box(3, 1, 4, 4), line((5, 1), (5, 5)), line((0, 3), (3, 3)), line((7, 3), (11, 3)), line((0, 2), (0, 4)), line((11, 2), (11, 4))]
         case "g6-pctwhole": // a block, copies laid end to end with hops over them: 12 by 4
             return [box(0, 2, 3, 2), box(3, 2, 3, 2), box(6, 2, 3, 2), box(9, 2, 3, 2), arc(1.5, 4.5, 2, 1.5), arc(4.5, 7.5, 2, 1.5), arc(7.5, 10.5, 2, 1.5)]
         case "g4-tentimes": // a disk opening into a ten-frame: 11 by 4
