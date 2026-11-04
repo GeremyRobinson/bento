@@ -15,6 +15,8 @@ public enum Spoken {
         for (sign, words) in signs { out = out.replacingOccurrences(of: sign, with: words) }
         // a sign with no spaces round it: 3+4=7
         for (sign, words) in [("+", " plus "), ("=", " equals "), ("×", " times "), ("÷", " divided by ")] { out = out.replacingOccurrences(of: sign, with: words) }
+        // a time as a person says it: 8:30 → half past 8, 8:00 → 8 o'clock
+        out = replace(out, #"\b(\d{1,2}):(\d\d)\b"#) { m in m[2] == "30" ? "half past \(m[1])" : m[2] == "00" ? "\(m[1]) o'clock" : "\(m[1]) \(m[2])" }
         // cents and dollars: 45¢ → 45 cents, 1¢ → 1 cent
         out = replace(out, #"\b1¢"#) { _ in "1 cent" }
         out = replace(out, #"(\d+)¢"#) { "\($0[1]) cents" }
