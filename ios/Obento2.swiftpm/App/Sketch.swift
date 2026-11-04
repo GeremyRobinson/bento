@@ -28,7 +28,10 @@ struct Sketch {
     /// along a spring's path instead of being drawn again. `from`: where a new part starts (the full bar a whole closes
     /// from): shown at once in that shape, it morphs into its own.
     struct Item { let id: String; let kind: Kind; let colour: Colour; var at: Double? = nil; var slot: String? = nil; var pace: Double = 1; var snaps = false
-        var morphs = false; var from: Kind? = nil; var delay: Double = 0 }
+        var morphs = false; var from: Kind? = nil; var delay: Double = 0
+        /// A shape it morphs through on the way from `from` to its own (a fold's half turning on over to 180° before it
+        /// lies back flat): it goes there first, rests a beat, then on to its own shape.
+        var via: Kind? = nil }
     private(set) var items: [Item] = []
     /// When the parts added from now on start drawing in (a map piece's words with its frame), instead of one after
     /// another from the drawing's start.
@@ -43,6 +46,8 @@ struct Sketch {
     var from: [String: Kind] = [:]
     /// How long the parts added from now on wait before they morph or glide (a column of pieces after another).
     var delay: Double = 0
+    /// Shapes new parts morph through, by id (see Item.via): set before the part is added.
+    var via: [String: Kind] = [:]
     /// What a hand move reads now (the live drawing's readout: "3 rows", "fourths", "5 hops of 0.6 = 3"), so the bar
     /// can say it big in its middle while the finger is down (the calm pill, G 26 Oct). Drawn nowhere by itself.
     var readout: String?
@@ -121,6 +126,7 @@ struct Sketch {
     }
     private mutating func add(_ item: Item) {
         var it = item; it.at = startAt; it.pace = pace; it.snaps = snaps; it.morphs = morphs || from[item.id] != nil; it.from = from[item.id]; it.delay = delay
+        it.via = via[item.id]
         items.append(it)
     }
     /// The same sketch in paper points: moved to `o` and drawn `k` times bigger.
@@ -140,15 +146,18 @@ struct Sketch {
         var out = Sketch()
         out.items = items.map { it in
             let kind = map(it.kind)
-            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map), delay: it.delay)
+            return Item(id: it.id, kind: kind, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace, snaps: it.snaps, morphs: it.morphs, from: it.from.map(map), delay: it.delay,
+                        via: it.via.map(map))
         }
         return out
     }
     /// The same parts on a sheet laid over the rest (a fold's turning half, 6th grade's Negative numbers): every point
     /// moved by `f` (in this sketch's points), lines drawn over plates and fills as plates so they sit on the sheet, words
     /// moved with it unless `words` is false (the sheet's back). `from`: each part starts where `g` puts it and morphs on
-    /// the paper's spring to where `f` does (the sheet lying back flat). Ids get `tag` after them.
-    func lifted(_ f: (CGPoint) -> CGPoint, words: Bool = true, from g: ((CGPoint) -> CGPoint)? = nil, tag: String = "") -> Sketch {
+    /// the paper's spring to where `f` does (the sheet lying back flat), through where `h` puts it first when given (the
+    /// sheet turning on over before it lies back). Ids get `tag` after them.
+    func lifted(_ f: (CGPoint) -> CGPoint, words: Bool = true, from g: ((CGPoint) -> CGPoint)? = nil, via h: ((CGPoint) -> CGPoint)? = nil,
+                wordsAt: Double? = nil, tag: String = "") -> Sketch {
         var out = Sketch()
         func kinds(_ kind: Kind, _ m: (CGPoint) -> CGPoint) -> [Kind] {
             switch kind {
@@ -162,10 +171,13 @@ struct Sketch {
             }
         }
         for it in items {
-            let to = kinds(it.kind, f), was = g.map { kinds(it.kind, $0) }
+            let to = kinds(it.kind, f), was = g.map { kinds(it.kind, $0) }, mid = g == nil ? nil : h.map { kinds(it.kind, $0) }
             for (i, k) in to.enumerated() {
-                out.items.append(Item(id: "\(it.id)\(to.count > 1 ? "#\(i)" : "")\(tag)", kind: k, colour: it.colour, at: it.at, slot: it.slot, pace: it.pace,
-                                      snaps: it.snaps, morphs: was != nil, from: was.map { $0[i] }, delay: it.delay))
+                // words (which don't morph) wait to write themselves until the sheet has lain back, when asked
+                var at = it.at
+                if case .text = k, let w = wordsAt { at = w }
+                out.items.append(Item(id: "\(it.id)\(to.count > 1 ? "#\(i)" : "")\(tag)", kind: k, colour: it.colour, at: at, slot: it.slot, pace: it.pace,
+                                      snaps: it.snaps, morphs: was != nil, from: was.map { $0[i] }, delay: it.delay, via: mid.map { $0[i] }))
             }
         }
         return out
@@ -290,6 +302,8 @@ final class SketchDrawer {
         var shape: Shape?
         /// Morphing from one shape to another (Item.morphs): its lines' points from and to, and when it set off.
         var morph: (from: [[CGPoint]], to: [[CGPoint]], start: Double)?
+        /// The shape it morphs on to once the morph now under way ends (Item.via), and when.
+        var next: (shape: Shape, at: Double)?
         var start: Double, length: Double
         var undrawing = false
         var shown = -1.0
@@ -345,6 +359,8 @@ final class SketchDrawer {
     }
     /// How long a part takes to morph to its new shape: as long as a moved part glides, so they go together.
     static let morphTime = glide
+    /// How long a part rests on its `via` shape before it morphs on (the print fading in under a fold's half).
+    static let viaRest = 0.35
     /// A node's shape as it shows now: mid-morph, or its own moved by any glide.
     private func current(_ n: Node, at t: Double) -> [[CGPoint]]? {
         if let m = n.morph {
@@ -541,7 +557,11 @@ final class SketchDrawer {
             // seeded: shown at once in the shape it starts from, then morphing into its own
             if showing, let seed = item.from, let to = node.shape, let fromShape = Self.shape(seed, P, scale: k), fromShape.fits(to) {
                 node.start = now; node.length = 0
-                startMorph(node, from: fromShape.lines, to: to, at: now + item.delay)
+                // through its `via` shape first (when it fits), resting a beat there, then on to its own
+                if let v = item.via, let viaShape = Self.shape(v, P, scale: k), viaShape.fits(to) {
+                    startMorph(node, from: fromShape.lines, to: viaShape, at: now + item.delay)
+                    node.next = (to, now + item.delay + Self.morphTime + Self.viaRest)
+                } else { startMorph(node, from: fromShape.lines, to: to, at: now + item.delay) }
             }
             nodes[item.id] = node
             if item.at == nil { order += 1 }
@@ -604,6 +624,10 @@ final class SketchDrawer {
                 now.lines = zip(m.from, m.to).map { a, b in zip(a, b).map { CGPoint(x: $0.x + ($1.x - $0.x) * f, y: $0.y + ($1.y - $0.y) * f) } }
                 if let mesh = now.mesh(), let e = n.parts.first { e.model?.mesh = mesh }
                 if t - m.start >= Self.morphTime { n.morph = nil } else { moving = true }
+            }
+            if let nx = n.next {
+                moving = true
+                if n.morph == nil, t >= nx.at, let sh = n.shape { n.next = nil; startMorph(n, from: sh.lines, to: nx.shape, at: nx.at) }
             }
             guard let mv = n.move else { continue }
             let f = Float(springPath((t - mv.start) / Self.glide))

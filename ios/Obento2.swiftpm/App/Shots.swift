@@ -332,7 +332,10 @@ enum Shots {
                     return args[i + 1].split(separator: ",").compactMap { Double($0) }
                 }
                 // a finger comes after the camera has framed the step, as a child's does
-                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") { try? await Task.sleep(for: .seconds(1.5)) }
+                // (-pause N: N seconds instead of 1.5, so a filmed move starts on a problem already drawn on the screen)
+                if args.contains("-tapsq") || args.contains("-drag") || args.contains("-block") {
+                    try? await Task.sleep(for: .seconds(numbers("-pause")?.first ?? 1.5))
+                }
                 // -slow N: from the finger's move on, the paper's clock runs N times slower (filmed frame by frame)
                 if let i = args.firstIndex(of: "-slow"), i + 1 < args.count, let n = Double(args[i + 1]), n > 0 {
                     PaperClock.slowFrom = Date().timeIntervalSinceReferenceDate; PaperClock.slow = n

@@ -50,6 +50,9 @@ struct NegativesLesson: PaperLesson {
                 if keep(p) { N6.point(&pen, "pt", p); N6.readout(&pen, "pr", p, Neg6.fm(t), up: up) }
             }
             let prints = at >= 3 ? [-t] + (P.twice && at >= 4 ? [t] : []) : []
+            // a new print fades in once the landed half lies over it (N6.flap's turn to 180°)
+            pen.sketch.startAt = PaperClock.now + N6.printAt
+            defer { pen.sketch.startAt = nil }
             for (j, w) in prints.enumerated() {
                 let q = N.at(w)
                 guard keep(q) else { continue }
@@ -70,7 +73,7 @@ struct NegativesLesson: PaperLesson {
         // the landed halves lie back flat (each from where it was let go), carrying what's on them
         for (j, l) in landed.enumerated() {
             let f = Self.fold(N, l.side)
-            N6.flap(&pic, "fl\(j)", f, rect: Self.sheet(N, l.side), th: 0, from: l.th, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
+            N6.flap(&pic, "fl\(j)", f, rect: Self.sheet(N, l.side), th: 0, from: l.th, landed: true, gridTop: s.gridTop) { content(&$0) { f.carries($0) } }
         }
         if let (th, sd) = back {
             let f = Self.fold(N, sd)

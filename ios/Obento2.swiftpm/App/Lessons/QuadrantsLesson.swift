@@ -60,6 +60,9 @@ struct QuadrantsLesson: PaperLesson {
                     Pl.pair(&pen, "pr", P.x, P.y)
                 }
             }
+            // a new print fades in once the landed half lies over it (N6.flap's turn to 180°)
+            pen.sketch.startAt = PaperClock.now + N6.printAt
+            defer { pen.sketch.startAt = nil }
             for (j, m) in prints.enumerated() {
                 let q = Pl.at(m.0, m.1)
                 guard keep(q) else { continue }
@@ -72,7 +75,7 @@ struct QuadrantsLesson: PaperLesson {
         // each landed half carries what's on it, less what a later fold has lifted off it
         for (j, l) in landed.enumerated() {
             let later = Array(landed.dropFirst(j + 1).map(\.f)) + [heldFold, back?.0].compactMap { $0 }
-            N6.flap(&pic, "fl\(j)", l.f, rect: Self.sheet(l.f), th: 0, from: l.th, gridTop: s.gridTop) {
+            N6.flap(&pic, "fl\(j)", l.f, rect: Self.sheet(l.f), th: 0, from: l.th, landed: true, gridTop: s.gridTop) {
                 content(&$0) { p in l.f.carries(p) && !later.contains { $0.lifted(p) } }
             }
         }

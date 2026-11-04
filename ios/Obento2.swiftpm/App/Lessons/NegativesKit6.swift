@@ -25,7 +25,7 @@ enum N6 {
                : abs(q.y - y0) <= m && q.x >= x0 + lo * U - m && q.x <= x0 + hi * U + m
         }
         /// Its two halves (each a piece of paper a fold can lift: `keep` leaves out what's lifted), a tick on every one
-        /// (0's longer), numbers on the fives (or `labels`), the one a point is over lit.
+        /// (0's longer), numbers on the fives (every second one on a long upright line, or `labels`), the one a point is over lit.
         func draw(_ pen: inout GridPen, _ id: String, keep: (CGPoint) -> Bool = { _ in true }, labels: [Double]? = nil, lit: Double? = nil) {
             let Z = at(0)
             for (s, end) in [(-1.0, lo), (1.0, hi)] {
@@ -42,7 +42,9 @@ enum N6 {
                 ticks.append(up ? (pen.P(x0 - t, p.y), pen.P(x0 + t, p.y)) : (pen.P(p.x, y0 - t), pen.P(p.x, y0 + t)))
             }
             pen.sketch.segments("\(id)t\(keep(at(lo)))\(keep(at(hi)))", ticks, .ink, width: Sketch.stroke)
-            let ls = labels ?? stride(from: lo.rounded(.up), through: hi, by: 1).filter { $0.truncatingRemainder(dividingBy: 5) == 0 }
+            // numbers on the fives; a long upright line (a square a one) numbers every second tick, so it reads at a glance
+            let every: Double = up && hi - lo >= 20 ? 2 : 5
+            let ls = labels ?? stride(from: lo.rounded(.up), through: hi, by: 1).filter { $0.truncatingRemainder(dividingBy: every) == 0 }
             for v in ls {
                 // kept by where its words are (beside the line), not by the line's point
                 let p = at(v), on = lit == v
@@ -161,10 +163,14 @@ enum N6 {
     }
     /// The turning half: its sheet `rect` (squares) with the grid's squares and what it carries (`content`, drawn flat on
     /// a pen of its own), turned by `th`; past upright its plain back. `from`: the angle it starts at, morphing to `th`
-    /// (lying back flat after it's let go).
+    /// (lying back flat after it's let go). `landed`: let go past upright, it first finishes its turn to 180° on the
+    /// spring (lying over the other side, where the print fades in under it), then lies back flat (as the preview does).
+    /// A landed half: how long until it lies over the other side (when the print fades in), and until it's flat again.
+    static let printAt = SketchDrawer.morphTime
+    static let overTime = SketchDrawer.morphTime * 2 + SketchDrawer.viaRest
     static let minor = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0x1A1A19, 0.045), Ink.mix(0x121211, 0xECEBE7, 0.035))
     static let major = Sketch.Colour.hex(Ink.mix(0xF3F2EF, 0x1A1A19, 0.09), Ink.mix(0x121211, 0xECEBE7, 0.07))
-    static func flap(_ pen: inout GridPen, _ id: String, _ f: Fold, rect r: CGRect, th: Double, from: Double? = nil, gridTop: Double, content: (inout GridPen) -> Void) {
+    static func flap(_ pen: inout GridPen, _ id: String, _ f: Fold, rect r: CGRect, th: Double, from: Double? = nil, landed: Bool = false, gridTop: Double, content: (inout GridPen) -> Void) {
         var sheet = GridPen(stableIds: pen.stableIds)
         let front = th <= .pi / 2
         let corners = [(r.minX, r.minY), (r.maxX, r.minY), (r.maxX, r.maxY), (r.minX, r.maxY)].map { sheet.P($0.0, $0.1) }
@@ -191,6 +197,9 @@ enum N6 {
         if from == nil { sheet.sketch.line(id + "o", corners + [corners[0]], .ink3, width: Sketch.stroke) }
         let sq = Paper.cell
         func inPoints(_ m: @escaping (CGPoint) -> CGPoint) -> (CGPoint) -> CGPoint { { p in let q = m(CGPoint(x: p.x / sq, y: p.y / sq)); return CGPoint(x: q.x * sq, y: q.y * sq) } }
-        pen.sketch.append(sheet.sketch.lifted(inPoints(f.map(th)), words: front, from: from.map { inPoints(f.map($0)) }, tag: from.map { "~\(Int($0 * 100))" } ?? ""))
+        let over = landed && from != nil
+        pen.sketch.append(sheet.sketch.lifted(inPoints(f.map(th)), words: front, from: from.map { inPoints(f.map($0)) },
+                                              via: over ? inPoints(f.map(.pi)) : nil, wordsAt: over ? PaperClock.now + N6.overTime : nil,
+                                              tag: from.map { "~\(Int($0 * 100))" } ?? ""))
     }
 }
