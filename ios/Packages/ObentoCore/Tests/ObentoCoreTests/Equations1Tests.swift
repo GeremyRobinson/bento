@@ -19,7 +19,8 @@ final class Equations1Tests: XCTestCase {
         let ch = Curriculum.chapters(1)[1]
         XCTAssertEqual(ch.title, "Equations and stories")
         XCTAssertEqual(ch.colour, "fractions")
-        for l in ch.lessons where Curriculum.built(l.id) { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)) }
+        XCTAssertTrue(Curriculum.built(ch))
+        for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)) }
     }
 
     // MARK: Add to take away
