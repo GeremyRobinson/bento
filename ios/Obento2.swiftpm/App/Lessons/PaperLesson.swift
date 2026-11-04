@@ -258,6 +258,9 @@ enum PaperLessons {
         case "g1-tensones": return TensOnes1Lesson()
         case "g1-compare": return Compare1Lesson()
         case "g1-tenmore": return TenMore1Lesson()
+        case "g1-addtens": return AddTens1Lesson(tensOnly: true)
+        case "g1-add100": return AddTens1Lesson(tensOnly: false)
+        case "g1-subtens": return SubTens1Lesson()
         default: return nil
         }
     }

@@ -209,6 +209,10 @@ extension Piece {
         case "g1-tensones": return [box(0, 0.5, 10, 1)]                         // a ten
         case "g1-compare": return [box(5.5, 3.5, 4.5, 1)]                       // the ten more
         case "g1-tenmore": return [box(4, 3.5, 1, 1)]                           // one row down
+        // 1st grade, Adding and taking away tens (4 Nov)
+        case "g1-addtens": return [box(0, 2.5, 10, 2)]                          // the new tens, joined
+        case "g1-add100": return [box(0, 2.5, 10, 1)]                           // ten ones closed into a new ten
+        case "g1-subtens": return [box(0, 0.5, 4.5, 2)]                         // the tens left
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -397,6 +401,26 @@ extension Piece {
             for r in 0..<3 { out.append(box(0, 0.5 + Double(r), 4.5, 1)) }
             for r in 0..<4 { out.append(box(5.5, 0.5 + Double(r), 4.5, 1)) }
             return out + [line((0, 5.5), (2, 5.5)), line((5.5, 5.5), (7, 5.5))]
+        // 1st grade, Adding and taking away tens (4 Nov)
+        case "g1-addtens", "g1-add100", "g1-subtens":
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            var out: [[CGPoint]] = []
+            switch id {
+            case "g1-addtens": // two tens, two more joined under them, three ones: 10 by 6
+                for r in 0..<4 { out.append(box(0, 0.5 + Double(r), 10, 1)) }
+                for j in 0..<3 { out.append(dot(Double(j) + 0.5, 5.25)) }
+            case "g1-add100": // two tens, a full row of ones closed into a ten, three ones: 10 by 6
+                for r in 0..<3 { out.append(box(0, 0.5 + Double(r), 10, 1)) }
+                for j in 0..<10 { out.append(dot(Double(j) + 0.5, 3)) }
+                for j in 0..<3 { out.append(dot(Double(j) + 0.5, 4.75)) }
+            default: // four tens on the left, two left; two slid away and crossed out: 10 by 6
+                for r in 0..<2 { out.append(box(0, 0.5 + Double(r), 4.5, 1)) }
+                for r in 0..<2 {
+                    out.append(box(5.5, 0.5 + Double(r), 4.5, 1))
+                    out.append(line((5.7, 1.35 + Double(r)), (9.8, 0.65 + Double(r))))
+                }
+            }
+            return out
         case "g1-tenmore": // three rows of the chart, a number ringed, one row down lit: 10 by 3, from row 1.5
             let ring = (0...24).map { k in let a = Double(k) / 24 * 2 * .pi; return P(4.5 + 0.7 * cos(a), 3 + 0.7 * sin(a)) }
             return [box(0, 1.5, 10, 3)] + (1..<10).map { x in line((Double(x), 1.5), (Double(x), 4.5)) } + [2.5, 3.5].map { y in line((0, y), (10, y)) } + [ring]
