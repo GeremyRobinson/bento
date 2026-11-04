@@ -38,6 +38,25 @@ public enum Curriculum {
         MapChapter("geometry", "Geometry", colour: "geometry", [MapLesson("g5-coord", "Points on a grid"), MapLesson("g5-shapes", "Sorting shapes")]),
     ]
 
+    /// Kindergarten (design/gradeK.md): 23 lessons in 5 chapters, in teaching order. Chapter 1, Count to 10, is built
+    /// (4 Nov); the map shows only built chapters, so the rest wait off it.
+    static let gradeK: [MapChapter] = [
+        MapChapter("gk-count", "Count to 10", colour: "whole", [
+            MapLesson("gk-count10", "Count to 10"), MapLesson("gk-onemore", "One more"), MapLesson("k-compare", "More, less or the same"),
+            MapLesson("gk-numcompare", "Which number is more?")]),
+        MapChapter("gk-shapes", "Shapes", colour: "geometry", [
+            MapLesson("k-shapes", "Flat shapes"), MapLesson("gk-draw", "Draw shapes"), MapLesson("k-solids", "Solid shapes"),
+            MapLesson("gk-position", "Where is it?"), MapLesson("gk-compose", "Put shapes together")]),
+        MapChapter("gk-measure", "Measure and sort", colour: "measurement", [
+            MapLesson("k-length", "Longer and shorter"), MapLesson("gk-heavier", "Heavier and lighter"), MapLesson("k-sort", "Sort and count")]),
+        MapChapter("gk-addsub", "Add and take away", colour: "whole", [
+            MapLesson("k-add", "Adding within 10"), MapLesson("k-sub", "Taking away within 10"), MapLesson("k-story", "Story problems within 10"),
+            MapLesson("k-bonds", "Number bonds"), MapLesson("k-make10", "Make 10"), MapLesson("gk-five", "Facts to 5")]),
+        MapChapter("gk-teens", "Teens and tens", colour: "whole", [
+            MapLesson("k-count20", "Count to 20"), MapLesson("k-write", "Write numbers 0 to 20"), MapLesson("k-teens", "Teen numbers"),
+            MapLesson("k-tens", "Count by tens to 100"), MapLesson("gk-count100", "Count to 100")]),
+    ]
+
     /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. All 8 chapters are built (3 Nov).
     static let grade4: [MapChapter] = [
         MapChapter("g4-big", "Big numbers", colour: "whole", [
@@ -93,7 +112,7 @@ public enum Curriculum {
 
     /// A grade's chapters, in order (none for a grade with no map yet).
     public static func chapters(_ grade: Int) -> [MapChapter] {
-        switch grade { case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
+        switch grade { case 0: gradeK; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
     }
     /// A lesson is built when the app has its spec.
     public static func built(_ id: String) -> Bool { Lessons.spec(id) != nil }
@@ -104,6 +123,8 @@ public enum Curriculum {
     /// The grade's own test, under everything. 5th grade's keeps the id it's always had.
     public static func gradeTest(_ grade: Int) -> String { grade == 5 ? "test-grade" : "test-grade-\(grade)" }
     public static func isGradeTest(_ id: String) -> Bool { id.hasPrefix("test-grade") }
+    /// Its words are spoken (Kindergarten and 1st grade: most can't read yet).
+    public static func voiced(_ id: String) -> Bool { grade(of: id).map { $0 <= 1 } ?? false }
     /// A lesson's name on its map ("Comparing big numbers").
     public static func name(of id: String) -> String? {
         for g in Grades.all { for c in chapters(g) { if let l = c.lessons.first(where: { $0.id == id }) { return l.name } } }
