@@ -117,8 +117,9 @@ struct MakeTen1Lesson: PaperLesson {
         let P = MakeTen1.Parts(s.numbers)
         switch at(s) {
         case 0:
+            // up and along, so the counters carried land in the places they fill
             let x = A1.x(P.need - 1) + 1.5
-            return [.drag(from: CGPoint(x: x, y: Self.bottom + 1.5), to: CGPoint(x: x, y: Self.top + 1.5))]
+            return [.drag(from: CGPoint(x: x, y: Self.bottom + 1.5), to: CGPoint(x: x + A1.x(P.a), y: Self.top + 1.5))]
         case 1: return [.tap(.picture(A1.keySpot(P.sum, y: Self.keys)))]
         default: return []
         }

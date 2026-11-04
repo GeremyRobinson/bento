@@ -331,6 +331,25 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-k-count20-0 -numbers n=14,ring=0,off=0 -tapsq …`, `page-k-write-2 -numbers n=7 -path 35.6,0.6,38,0.6,40.5,0.6 -hold` (`-path`
   drags a finger through points: a trace), `page-k-teens-0 -numbers ones=6,make=1 -path 2.5,2.5,22.5,7.5,32.5,2.5,37.5,7.5`,
   `page-k-tens-1 -numbers rows=7 -tapsq 19.5,31.5,1.5,31.5 -block Check`, `page-gk-count100-0 -numbers kind=1,n=40,c0=50,c1=40,c2=30 -tapsq 10,22`.
+- Kindergarten calls (4 Nov): the drawn digit pad's keys are 4 × 4 squares (80 pt at 100%, 60 pt at 75%), as the number row's
+  are (5 × 4). Count to 100's see is the preview's: for that moment the words, record and blocks step aside and the camera frames
+  the whole chart alone, tight (67%, was 53%), the last column lighting row by row; then the three rows come back with the last line
+  and Next problem. Shared: `PaperLesson.alone(s)` (asked every frame; the clock stays awake while it's true, `BarsPage.wakers`).
+- **1st grade is live** (4 Nov; Core: `Curriculum.grade1`, all 26 lessons in 6 chapters, only built chapters on the map; grade 1;
+  read aloud and first chapter free as K). Chapter 1, Add and take away to 20, is built (Core: `AddSub1` (`G1` the number row's
+  slips 0–20, `Add20` g1-add20, `MakeTen1` g1-ten, `Doubles1` g1-doubles, `Three1` g1-three, `Sub20` g1-sub20), tests
+  `AddSub1Tests`; App: `Add20Lesson`, `MakeTen1Lesson`, `Doubles1Lesson`, `Three1Lesson`, `Sub20Lesson`, their shared `AddKit1` (`A1`:
+  counters 3 × 3 solid/striped/dotted, rows of places, the line 0–20 three squares a step, hops with arrowheads, a record line with
+  boxes anywhere, the number row 0–20 with 0 on the picture's left edge)). As the preview (`design/prototype/grade1-ch1.html`), its
+  words word for word, the grey line folded into the instruction ("These two make 10, so add them first. Slide these two into the
+  top row."). Departures: a story item's two sentences start its first instruction (written once, said with it) instead of over the
+  picture; Add three numbers' record goes beside the twenty and its number row under it (75% with a story's two rows of words); its
+  lit groups are ringed, not tinted (a tint under the counters flickers); the last group's counters land one after another but the
+  running count isn't written while they land; Make a ten's slide past full isn't a miss (the row fills, the rest go back) and "The
+  top row is full. That's 10." is said before the write's line; Doubles' slide and Make a ten's fill can't be missed (as the
+  preview). Least zooms: 82%, 92%, 89%, 75%, 83%. Shots e.g. `page-g1-add20-1 -numbers a=3,b=9 -tapsq 3,10.5,30,10.5 -tapgap 2.6`,
+  `page-g1-ten-0 -numbers a=8,b=5 -drag 13.5,5.5,24.5,1.5`, `page-g1-three-0 -numbers a=4,b=4,c=7,story=1`,
+  `page-g1-sub20-0 -numbers a=14,b=6 -drag 42,6.5,33,6.5 -hold`, `bar-grade-open -grade 1`.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost

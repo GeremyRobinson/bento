@@ -46,9 +46,9 @@ struct Three1Lesson: PaperLesson {
         A1.places(&pic, "tb", x: 0, y: Self.twenty + 4)
         let code = Int(s.run.kept["u"] ?? Double(P.pairCode)), pair = Three1.pair(code) ?? P.first.pair
         // the two to slide first, lit (once picked, or offered when there's no pick)
-        if st == 1 { for g in [P.first.pair.0, P.first.pair.1] where !u.contains(g) && held != g { KK.stadium(&pic, "lit\(g)", x: -0.5, y: Self.gy(g) - 0.5, w: A1.x(v[g]) + 1, h: 4) } }
+        if st == 1 { for g in [P.first.pair.0, P.first.pair.1] where !u.contains(g) && held != g { KK.stadium(&pic, "lit\(g)", x: -0.25, y: Self.gy(g) - 0.25, w: A1.x(v[g]) + 0.25, h: 3.5) } }
         let sel = Int(s.run.kept["sel"] ?? 0)
-        if st == 0 { for g in 0..<3 where sel & (1 << g) != 0 { KK.stadium(&pic, "lit\(g)", x: -0.5, y: Self.gy(g) - 0.5, w: A1.x(v[g]) + 1, h: 4) } }
+        if st == 0 { for g in 0..<3 where sel & (1 << g) != 0 { KK.stadium(&pic, "lit\(g)", x: -0.25, y: Self.gy(g) - 0.25, w: A1.x(v[g]) + 0.25, h: 3.5) } }
         if st == 0, let bad = KA.kept(s, "bad"), let (a, b) = Three1.pair(bad) {
             for g in [a, b] { pic.sketch.box("bad\(g)", pic.R(-0.5, Self.gy(g) - 0.5, A1.x(v[g]) + 1, 4), KK.red, width: Sketch.stroke) }
         }
