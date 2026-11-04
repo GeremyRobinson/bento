@@ -94,6 +94,13 @@ enum PaperLessons {
         case "g4-compare": return CompareBigLesson()
         case "g4-placevalue": return PlaceValueLesson()
         case "g4-addsub": return AddSubBigLesson()
+        // 4th grade, Multiplying and dividing (3 Nov 2026)
+        case "g4-times": return TimesAsManyLesson()
+        case "g4-partial": return MultiplyBigLesson()
+        case "g4-mult2x2": return TwoByTwoLesson()
+        case "g4-divide": return DealLesson(big: false)
+        case "g4-share": return DealLesson(big: true)
+        case "g4-multistep": return StoryStepsLesson()
         default: return nil
         }
     }

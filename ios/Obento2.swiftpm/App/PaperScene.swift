@@ -86,6 +86,12 @@ extension Piece {
         case "g4-compare": return [box(3, 0, 2, 2)]                             // the place that decides
         case "g4-placevalue": return [box(0, 2, 3, 2)]                          // the stretch down to the round number
         case "g4-addsub": return [box(7, 0, 2, 2)]                              // the ones, first
+        // 4th grade, Multiplying and dividing (3 Nov)
+        case "g4-times": return [box(0, 0, 3, 2)]                               // Red
+        case "g4-partial": return [box(0, 0, 3, 6)]                             // the hundreds, every row
+        case "g4-mult2x2": return [box(0, 0, 6, 4)]                             // tens × tens
+        case "g4-divide", "g4-share": return [box(0, 3, 3, 1)]                  // one row's share
+        case "g4-multistep": return [box(6, 4, 3, 2)]                           // the part taken away
         default: return []
         }
     }
@@ -165,6 +171,16 @@ extension Piece {
             return out
         case "g4-addsub": // two numbers in columns, and the line under them: 9 by 4
             return [1, 3, 5, 7].flatMap { x in [box(Double(x), 0, 2, 2), box(Double(x), 2, 2, 2)] } + [line((0, 4), (9, 4))]
+        case "g4-times": // Red, and Blue three copies of it: 9 by 6
+            return [box(0, 0, 3, 2)] + bar(0, 4, 9, 3)
+        case "g4-partial": // a row of a number's places, copied down: 11 by 6
+            return [box(0, 0, 11, 6), line((0, 2), (11, 2)), line((0, 4), (11, 4)), line((3, 0), (3, 6)), line((7, 0), (7, 6))]
+        case "g4-mult2x2": // a rectangle cut both ways where the tens end: 9 by 6
+            return [box(0, 0, 9, 6), line((6, 0), (6, 6)), line((0, 4), (9, 4))]
+        case "g4-divide", "g4-share": // a frame on top, dealt into three rows: 9 by 6
+            return [box(0, 0, 9, 2), line((0, 3), (9, 3)), line((0, 4), (9, 4)), line((0, 5), (9, 5)), line((0, 6), (9, 6))]
+        case "g4-multistep": // three groups, and a part taken off the end: 9 by 6
+            return bar(0, 0, 9, 3) + [box(0, 4, 9, 2), line((6, 4), (6, 6))]
         case "g5-volume": // a box of cubes, 4 by 3 by 2, as the lesson shows it
             return box3D(l: 4, h: 2, w: 3, u: 32)
         case "add": // thirds and thirds, added: 9 by 6
