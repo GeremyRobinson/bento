@@ -251,6 +251,7 @@ enum PaperLessons {
         case "g1-related": return Related1Lesson()
         case "g1-missing": return Missing1Lesson()
         case "g1-equal": return Equal1Lesson()
+        case "g1-story": return Story1Lesson()
         default: return nil
         }
     }
