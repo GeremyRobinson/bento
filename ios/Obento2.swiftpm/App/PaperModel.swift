@@ -104,8 +104,9 @@ struct ChapterGroup {
     }
 }
 
-/// One grade's map, laid out (Core's Curriculum, G 3 Nov): its chapters packed into two columns, each chapter's test in
-/// the slot after its last lesson, the grade's test under everything. Worked out once per grade.
+/// One grade's map, laid out (Core's Curriculum, G 3 Nov): its built chapters packed into two columns, each chapter's
+/// test in the slot after its last lesson, the grade's test under everything once every chapter is built. Worked out
+/// once per grade.
 struct GradeMap {
     let grade: Int
     let groups: [ChapterGroup]
@@ -122,7 +123,8 @@ struct GradeMap {
 
     init(grade: Int) {
         self.grade = grade
-        let chapters = Curriculum.chapters(grade)
+        // only the chapters that are built (G 3 Nov, design/README.md "Calls made"): the map grows as chapters land
+        let every = Curriculum.chapters(grade), chapters = every.filter(Curriculum.built)
         groups = ChapterGroup.packed(chapters)
         pieces = groups.flatMap(\.pieces)
         gradeTest = Curriculum.gradeTest(grade)
@@ -133,7 +135,7 @@ struct GradeMap {
         let gradeName = Grades.name(grade)
         tests = groups.map { g in
             Piece(id: "test-\(g.key)", name: "\(g.title) test", chapter: g.chapter, at: g.slot(g.lessons.count), group: g.key)
-        } + [Piece(id: gradeTest, name: "\(gradeName) test", chapter: groups.first?.chapter ?? .whole, at: Point(c.key, c.value), group: "")]
+        } + (chapters.count == every.count ? [Piece(id: gradeTest, name: "\(gradeName) test", chapter: groups.first?.chapter ?? .whole, at: Point(c.key, c.value), group: "")] : [])
         all = pieces + tests
         paperLessons = Set(pieces.map(\.id).filter { Lessons.spec($0) != nil })
         gradeLessons = pieces.map(\.id).filter { Lessons.spec($0) != nil }

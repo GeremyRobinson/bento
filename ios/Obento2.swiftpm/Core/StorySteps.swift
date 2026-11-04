@@ -55,14 +55,16 @@ public enum StorySteps {
 
     /// The preview's generator. Index < 3: take away, then more, then take away (a 3–5, b 12–95, c 15–95); then all three
     /// in turn: b 105–195 with a 2–4 (a × b up to 600), c up to a × b − 100 taken away, a × b + c at most 600 joined on;
-    /// sharing: a 200–600, b 3–9, a − c a multiple of b with 12 or more in a part. No amount is a whole ten.
+    /// sharing: a 200–600, b 3–9, a − c a multiple of b with 12 or more in a part, and the rounded rest (in squares, a
+    /// square a ten) a multiple of b, so its parts are whole squares. No amount is a whole ten.
     static func make(_ rng: inout SeededRandom, _ index: Int) -> Numbers {
         let kind = index < 3 ? index % 2 : index % 3, theme = Int.random(in: 0...1, using: &rng)
         func nt(_ lo: Int, _ hi: Int) -> Int { while true { let v = Int.random(in: lo...max(lo, hi), using: &rng); if v % 10 != 0 { return v } } }
         while true {
             if kind == 2 {
                 let b = Int.random(in: 3...9, using: &rng), a = nt(200, 600), c = nt(15, a - 100)
-                if (a - c) % b != 0 || (a - c) / b < 12 { continue }
+                // the rounded rest shares into whole squares (G 3 Nov: no blank stretch is left)
+                if (a - c) % b != 0 || (a - c) / b < 12 || ((round10(a) - round10(c)) / 10) % b != 0 { continue }
                 return numbers(kind: 2, a: a, b: b, c: c, theme: theme)
             }
             let a: Int, b: Int, c: Int

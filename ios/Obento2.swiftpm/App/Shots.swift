@@ -369,11 +369,12 @@ enum Shots {
                 Progress.shared.reset(to: whole, tests: ["test-whole": 10]); m.frameChapter(0)
             case "grade-test":
                 Progress.shared.reset(to: Set(Map.gradeLessons), tests: ["test-whole": 12, "test-decimals": 10, "test-fractions": 11, "test-measurement": 10])
-                m.select(Map.tests.first { Map.isGradeTest($0.id) }!)
+                if let t = Map.tests.first(where: { Map.isGradeTest($0.id) }) { m.select(t) }
             case "test-page":
                 // a chapter's test, its 12 problems mixed from its lessons (-chapter=<n>: that chapter's; Whole numbers')
                 let n = args.first { $0.hasPrefix("-chapter=") }.flatMap { Int($0.dropFirst(9)) } ?? 0
-                let t = Map.tests[min(max(0, n), Map.tests.count - 2)]
+                let chapterTests = Map.tests.filter { !Map.isGradeTest($0.id) }
+                let t = chapterTests[min(max(0, n), chapterTests.count - 1)]
                 Progress.shared.reset(to: Set(Map.pieces.filter { $0.group == t.group }.map(\.id)))
                 m.select(t); m.open(t)
             case "selected-ad": m.select(Map.piece("add"))

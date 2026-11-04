@@ -389,6 +389,8 @@ final class MultiplyDivideTests: XCTestCase {
                 switch s.kind {
                 case 2:
                     XCTAssertTrue((200...600).contains(s.a)); XCTAssertEqual((s.a - s.c) % s.b, 0); XCTAssertGreaterThanOrEqual(s.n, 12)
+                    // the rounded rest's parts are whole squares
+                    XCTAssertEqual(((StorySteps.round10(s.a) - StorySteps.round10(s.c)) / 10) % s.b, 0)
                 default:
                     if i < 3 { XCTAssertTrue((3...5).contains(s.a)); XCTAssertTrue((12...95).contains(s.b)); XCTAssertTrue((15...95).contains(s.c)) }
                     else { XCTAssertTrue((105...195).contains(s.b)); XCTAssertLessThanOrEqual(s.a * s.b, 600) }
