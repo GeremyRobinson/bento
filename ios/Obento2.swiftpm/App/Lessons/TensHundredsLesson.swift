@@ -21,7 +21,10 @@ struct TensHundredsLesson: PaperLesson {
         init(_ n: Numbers) {
             p = TensHundreds.Parts(n)
             frames = (p.c + 9) / 10
-            chart = PlaceChart.sized(n: p.columns, frames: frames, y0: TensHundredsLesson.y0)
+            // past 3 frames down one column, 1-square cells two frames across (G 3 Nov: the camera rarely goes under
+            // 75%; 50 thousands in 2-square cells was seen at 67%)
+            let big = PlaceChart.sized(n: p.columns, frames: frames, y0: TensHundredsLesson.y0)
+            chart = big.c == 2 && big.pr == 1 && frames > 3 ? PlaceChart(n: p.columns, c: 1, pr: 2, y0: TensHundredsLesson.y0) : big
             bottom = chart.bottom(frames: frames) + 1
         }
         /// Frames drawn in each column: the place's as many rows as its disks need, the others one row.

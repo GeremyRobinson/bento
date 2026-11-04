@@ -11,8 +11,19 @@ import SwiftUI
 @MainActor
 struct AddSubBigLesson: PaperLesson {
     /// The chart: names from row 0, the top band's frames from 3 (and 8), the second number's from 13, the columns'
-    /// lines down to 18.
-    static let top = 0.0, yT = 3.0, yB = 13.0, yEnd = 18.0
+    /// lines down to 18. Six columns take 1-square cells, a band's two frames side by side: the top band on 3, the second
+    /// number's on 7, the lines down to 10 (G 3 Nov: the camera rarely goes under 75%; six columns of 2-square cells were
+    /// seen at 66% to 70%, under or beside).
+    static let top = 0.0
+    struct Geo { let ch: PlaceChart, yT: Double, yB: Double, yEnd: Double
+        /// The top band's rows (a tap there opens a ten).
+        var topEnd: Double { ch.c == 2 ? yT + 7.5 : yT + 2.5 }
+    }
+    static func geo(_ P: AddSubBig.Parts) -> Geo {
+        let n = columns(P)
+        if n <= 5 { return Geo(ch: PlaceChart(n: n, c: 2, pr: 1, y0: 3), yT: 3, yB: 13, yEnd: 18) }
+        return Geo(ch: PlaceChart(n: n, c: 1, pr: 2, y0: 3), yT: 3, yB: 7, yEnd: 10)
+    }
     /// The record: what's carried or traded on row 2, a on 4, b on 6, the rule on line 8, the answer on 10.
     static let carryRow = 2.0, aRow = 4.0, bRow = 6.0, rule = 8.0, ansRow = 10.0
 
@@ -22,7 +33,7 @@ struct AddSubBigLesson: PaperLesson {
     private func stage(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     private func phase(_ s: PaperState) -> Int { Int((s.picture["ph"] ?? 0).rounded()) }
     nonisolated static func columns(_ P: AddSubBig.Parts) -> Int { max(5, BigNumbers.length(P.R), P.length) }
-    static func chart(_ P: AddSubBig.Parts) -> PlaceChart { PlaceChart(n: columns(P), c: 2, pr: 1, y0: yT) }
+    static func chart(_ P: AddSubBig.Parts) -> PlaceChart { geo(P).ch }
 
     /// One disk on the chart, or several stacked as one (ten closed, or a disk about to open into ten).
     /// Each disk keeps its own look as it moves, so it glides; a closed ten is its ten disks stacked, all solid.
@@ -87,17 +98,17 @@ struct AddSubBigLesson: PaperLesson {
     }
 
     func draw(_ s: PaperState) -> PaperDrawing {
-        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s)
+        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s), g = Self.geo(P)
         let opened = (s.h("opened") ?? 0) != 0
         let model = Chart(P, moves: at >= 3 ? P.phases.count : k, opened: opened)
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
-        ch.draw(&pic, "ch", bands: [(Self.yT, { _ in 2 }), (Self.yB, { _ in 1 })], top: Self.top, bottom: Self.yEnd)
+        ch.draw(&pic, "ch", bands: [(g.yT, { _ in 2 }), (g.yB, { _ in 1 })], top: Self.top, bottom: g.yEnd)
         let phases = P.phases
         let moving: [Int] = at == 1 ? { if case .slide(let c) = phases[k] { c } else { [] } }() : []
         let held = s.grabbed && (s.h("wrong") ?? 0) == 0, dy = s.h("dy") ?? 0
         for pw in 0..<ch.n {
             for (j, item) in model.top[pw].enumerated() {
-                let p = ch.slot(pw, j, band: Self.yT), gone = model.crossed[pw][j]
+                let p = ch.slot(pw, j, band: g.yT), gone = model.crossed[pw][j]
                 // taken away: faint, crossed out as school crosses it out (the striped disk that took it is used up)
                 for (id, striped) in zip(item.ids, item.striped) { ch.disk(&pic, id + (gone != nil ? "x" : ""), at: p, striped: striped, faint: gone != nil) }
                 if let sid = gone {
@@ -106,7 +117,7 @@ struct AddSubBigLesson: PaperLesson {
                 }
             }
             for (j, sid) in model.bottom[pw].enumerated() {
-                let p = ch.slot(pw, j, band: Self.yB)
+                let p = ch.slot(pw, j, band: g.yB)
                 if held && moving.contains(pw) { ch.disk(&live, sid, at: CGPoint(x: p.x, y: p.y + dy), striped: true) }
                 else { ch.disk(&pic, sid, at: p, striped: true) }
             }
@@ -115,7 +126,7 @@ struct AddSubBigLesson: PaperLesson {
         let cp: Int? = at == 1 && (moving.first ?? 3) < 3 ? moving.first : at == 2 ? { if case .close(let c) = phases[k] { c } else { nil } }() : nil
         if let cp {
             let n = model.left(cp)
-            pic.label("cnt\(cp).\(n)", "\(n) \(BigNumbers.place(cp, n))", Self.small, .below, edge: Self.yEnd, along: ch.mid(cp))
+            pic.label("cnt\(cp).\(n)", "\(n) \(BigNumbers.place(cp, n))", Self.small, .below, edge: g.yEnd, along: ch.mid(cp))
         }
         if held, let c = moving.first, c < 3 { let n = model.left(c); live.reads("\(n) \(BigNumbers.place(c, n))") }
         // a hint: what to do now, outlined
@@ -124,10 +135,10 @@ struct AddSubBigLesson: PaperLesson {
                 let f = ch.frame(cp, 0)
                 pic.sketch.box("ring", pic.R(f.x - 0.5, f.y - 0.5, 5 * ch.c + 1, 2 * ch.c + 1), .chapter, width: Sketch.stroke, dashed: true)
             } else if at == 1, P.sub, moving.contains(P.at), !opened, let j = model.top[P.at + 1].indices.last {
-                let p = ch.slot(P.at + 1, j, band: Self.yT)
+                let p = ch.slot(P.at + 1, j, band: g.yT)
                 pic.circle("ring", at: p.x, p.y, radius: ch.r + 0.6, .chapter, dashed: true)
             } else if at == 1, let c = moving.first {
-                pic.sketch.box("ring", pic.R(ch.colX(c) + 0.5, Self.yB - 0.5, ch.cw * Double(moving.count) - 1, 2 * ch.c + 1), .chapter, width: Sketch.stroke, dashed: true)
+                pic.sketch.box("ring", pic.R(ch.colX(c) + 0.5, g.yB - 0.5, ch.cw * Double(moving.count) - 1, 2 * ch.c + 1), .chapter, width: Sketch.stroke, dashed: true)
             }
         }
 
@@ -166,21 +177,29 @@ struct AddSubBigLesson: PaperLesson {
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: boxes)
     }
 
-    func messageRows(_ n: Numbers) -> Int { 2 }
+    /// Every slip fits one row over the chart (its narrowest, beside a five-column chart, is 69 squares); a second row
+    /// cost a story its 75%.
+    func messageRows(_ n: Numbers) -> Int { 1 }
+    /// The record may go beside the chart, level with its names, when that shows it bigger (five columns: the chart is
+    /// 18 rows tall, and under it the column working was seen at 56% in a story).
+    func recordBeside(_ n: Numbers) -> Double? { Self.top }
+    /// Under the chart, the record's own first rows are empty (the carries sit on its row 2): it starts a square under
+    /// the columns' lines, so its first number is 3 rows under the count.
+    func recordRow(_ n: Numbers) -> Double? { Self.geo(AddSubBig.Parts(n)).yEnd + 1 }
 
     func hands(_ s: PaperState) -> Hands? {
-        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s), phases = P.phases
+        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s), phases = P.phases, g = Self.geo(P)
         guard at == 1 || at == 2, phases.indices.contains(k) else { return nil }
         let opened = (s.h("opened") ?? 0) != 0
         let model = Chart(P, moves: k, opened: opened)
         func inBottom(_ q: CGPoint) -> Int? {
-            guard q.y >= Self.yB - 0.5, q.y <= Self.yB + 2 * ch.c + 0.5, let pw = ch.place(at: q.x), !model.bottom[pw].isEmpty else { return nil }
+            guard q.y >= g.yB - 0.5, q.y <= g.yB + 2 * ch.c + 0.5, let pw = ch.place(at: q.x), !model.bottom[pw].isEmpty else { return nil }
             return pw
         }
         if case .close(let c) = phases[k] {
             return Hands(
                 tap: { q in
-                    guard q.y >= Self.yT - 0.5, q.y <= Self.yEnd, ch.place(at: q.x) != nil else { return nil }
+                    guard q.y >= g.yT - 0.5, q.y <= g.yEnd, ch.place(at: q.x) != nil else { return nil }
                     if ch.place(at: q.x) == c, ch.frame(at: q, c, count: 2) == 0 { return HandMove(hand: nil, missHand: nil, set: [("x", 1)], check: true) }
                     return HandMove(hand: nil, missHand: nil, set: [("x", 6)], check: true)
                 },
@@ -194,7 +213,7 @@ struct AddSubBigLesson: PaperLesson {
         return Hands(
             // taking away: a disk of the next column tapped opens into ten
             tap: { q in
-                guard P.sub, q.y >= Self.yT - 0.5, q.y <= Self.yT + 7.5, let pw = ch.place(at: q.x), !model.top[pw].isEmpty else { return nil }
+                guard P.sub, q.y >= g.yT - 0.5, q.y <= g.topEnd, let pw = ch.place(at: q.x), !model.top[pw].isEmpty else { return nil }
                 if opened { return nil }
                 if !trade { return HandMove(hand: nil, missHand: nil, set: [("x", 3)], check: true) }
                 if pw != P.at + 1 { return HandMove(hand: nil, missHand: nil, set: [("x", 4)], check: true) }
@@ -209,20 +228,20 @@ struct AddSubBigLesson: PaperLesson {
             },
             drag: { q, h in
                 var h = h
-                h["dy"] = max(Self.yT - Self.yB, min(0.5, (q.y - (h["fy"] ?? 0)).rounded()))
+                h["dy"] = max(g.yT - g.yB, min(0.5, (q.y - (h["fy"] ?? 0)).rounded()))
                 return h
             },
             release: { h in
                 let keep: Numbers = opened ? ["opened": 1] : [:]
                 if (h["wrong"] ?? 0) != 0 { return HandMove(hand: keep, missHand: keep, set: [("x", 5)], check: true) }
                 // not lifted far: it drops back
-                guard (h["dy"] ?? 0) <= -3 else { return HandMove(hand: keep, missHand: keep, set: [], check: false) }
+                guard (h["dy"] ?? 0) <= -min(3, g.yB - g.yT - 1) else { return HandMove(hand: keep, missHand: keep, set: [], check: false) }
                 return HandMove(hand: keep, missHand: keep, set: [("x", trade && !opened ? 2 : 1)], check: true)
             })
     }
 
     func demo(_ s: PaperState) -> [GhostMove] {
-        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s), phases = P.phases
+        let P = AddSubBig.Parts(s.numbers), ch = Self.chart(P), at = stage(s), k = phase(s), phases = P.phases, g = Self.geo(P)
         guard phases.indices.contains(k) else { return [] }
         if at == 2, case .close(let c) = phases[k] { return [.tap(.picture(ch.centre(c, 0)))] }
         guard at == 1, case .slide(let cols) = phases[k], let c = cols.first else { return [] }
@@ -232,8 +251,8 @@ struct AddSubBigLesson: PaperLesson {
             let model = Chart(P, moves: k, opened: false)
             if let j = model.top[P.at + 1].indices.last { moves.append(.tap(.picture(ch.slot(P.at + 1, j)))) }
         }
-        let from = CGPoint(x: ch.mid(c), y: Self.yB + ch.c)
-        moves.append(.drag(from: from, to: CGPoint(x: from.x, y: from.y - (Self.yB - Self.yT))))
+        let from = CGPoint(x: ch.mid(c), y: g.yB + ch.c)
+        moves.append(.drag(from: from, to: CGPoint(x: from.x, y: from.y - (g.yB - g.yT))))
         return moves
     }
 
