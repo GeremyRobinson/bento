@@ -680,7 +680,8 @@ public enum Classify4 {
 
 // MARK: - Lines of symmetry
 
-/// Lines of symmetry (the web app's g4-symmetry, 4.G.3): the shape centred on a grid point, about 28 squares across,
+/// Lines of symmetry (the web app's g4-symmetry, 4.G.3): the shape centred on a grid point, 22–28 squares across (the
+/// square 22, the rectangle 26 × 14, so a fold on a diagonal still shows at 75%),
 /// corners on grid points where it allows (the regular triangle, pentagon and hexagon drawn true). Is the dashed line a
 /// line of symmetry: fold on it (drag one half over the line; every corner lands on a corner, or parts stick out), then
 /// Yes or No. How many lines: draw a fold line across it (it snaps to lines through the middle) and let go: it folds; a
@@ -701,8 +702,8 @@ public enum Symmetry4 {
         return raw.map { Pt($0.x, $0.y - c) }
     }()
     public static let shapes: [Shape] = [
-        Shape(name: "square", pts: [Pt(-12, -12), Pt(12, -12), Pt(12, 12), Pt(-12, 12)], lines: [0, 90, 45, 135], traps: [], regular: 4),
-        Shape(name: "rectangle", pts: [Pt(-14, -8), Pt(14, -8), Pt(14, 8), Pt(-14, 8)], lines: [0, 90], traps: [atan2(8, 14) / Geo4.rad, 180 - atan2(8, 14) / Geo4.rad], regular: 0),
+        Shape(name: "square", pts: [Pt(-11, -11), Pt(11, -11), Pt(11, 11), Pt(-11, 11)], lines: [0, 90, 45, 135], traps: [], regular: 4),
+        Shape(name: "rectangle", pts: [Pt(-13, -7), Pt(13, -7), Pt(13, 7), Pt(-13, 7)], lines: [0, 90], traps: [atan2(7, 13) / Geo4.rad, 180 - atan2(7, 13) / Geo4.rad], regular: 0),
         Shape(name: "triangle", pts: reg(3, 14, 90), lines: [90, 30, 150], traps: [0], regular: 3),
         Shape(name: "triangle", pts: [Pt(0, -14), Pt(9, 10), Pt(-9, 10)], lines: [90], traps: [0], regular: 0),
         Shape(name: "triangle", pts: [Pt(-3, -12), Pt(13, 9), Pt(-12, 9)], lines: [], traps: [90], regular: 0),

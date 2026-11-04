@@ -75,7 +75,7 @@ struct LinesLesson: PaperLesson {
                 let (W, H, l, t) = (self.W, self.H, self.l, self.t)
                 func add(_ q: Pt, _ d: (Int, Int), _ a: Double, _ b: Double) {
                     let u = un(d), (lo, hi) = Self.clip(Pt(q.x - l, q.y - t), u, W, H)
-                    out.append(Line(q: q, u: u, lo: lo, hi: hi, t0: max(a, lo + 1), t1: min(b, hi - 1)))
+                    out.append(Line(q: q, u: u, lo: lo, hi: hi, t0: max(a, lo + 3), t1: min(b, hi - 3)))
                 }
                 if p.make { add(X, d1, -1e9, 1e9); P = Pt(X.x + 2 * off.x, X.y + 2 * off.y) }
                 else if p.item == 0 { add(Pt(X.x - off.x, X.y - off.y), d1, -15, 3); add(Pt(X.x + off.x, X.y + off.y), d2, -3, 15) }
@@ -83,8 +83,10 @@ struct LinesLesson: PaperLesson {
                 lines = out
             }
             rest = Pt(r.rounded(.up) + 3, 7)
-            rec = G8.placeRecord(r: r + (p.kind == 1 && !p.make ? 10 : 0), b: b, w: Self.recW(p), h: 5,
-                                 wBeside: p.make ? nil : max(G8.columnWidth(p.names), Record.width(p.named) + 1), hBeside: p.make ? nil : 3 * Double(p.names.count))
+            let placed = G8.placeRecord(r: r + (p.kind == 1 && !p.make ? 10 : 0), b: b, w: Self.recW(p), h: 5,
+                                 wBeside: p.make ? nil : max(G8.columnWidth(p.names), Record.width(p.named) + 1), hBeside: p.make ? nil : 3 * Double(p.names.count) + 2)
+            // beside, the names start two rows lower: what a tool showed is written over them
+            rec = placed.beside && !p.make ? (placed.x, placed.y + 2, true) : placed
         }
         /// The record's width: the names to pick from, or the name and its blocks (Check, Next problem).
         static func recW(_ p: LinesRays.Parts) -> Double { p.make ? max(Record.width(p.named) + 1, 10) : G8.choicesWidth(p.names) }
@@ -236,7 +238,7 @@ struct LinesLesson: PaperLesson {
             if ran && p.item > 0 { pic.dot("X", at: q.X.x, q.X.y, radius: 0.4, .chapter, over: true) }
             if !p.make && allRun {
                 let f = stage == .corner || p.item == 0 ? p.ran : p.finding
-                G8.aside(&pic, "fd", f, x: q.r + 3, y: 9, w: 17)
+                if q.rec.beside { G8.aside(&pic, "fd", f, x: q.rec.x, y: 0, w: max(16, q.recWidth)) } else { G8.aside(&pic, "fd", f, x: q.rest.x, y: 2, w: 14) }
             }
             if stage == .corner {
                 let at = Pt(s.h("px") ?? q.rest.x, s.h("py") ?? q.rest.y)
@@ -320,7 +322,7 @@ struct LinesLesson: PaperLesson {
                 return h
             }, release: { h in
                 let i = Int(h["ln"] ?? 0), ln = q.lines[i], pull = h["pull"] ?? 0
-                let out = (h["end"] ?? 1) == 1 ? pull > ln.t1 + 1 : pull < ln.t0 - 1
+                let out = (h["end"] ?? 1) == 1 ? pull >= ln.t1 + 1 : pull <= ln.t0 - 1
                 var b = base; b["grab"] = nil
                 guard out else { return HandMove(hand: b, missHand: b, set: [("r", 0)], check: true) }
                 b["r\(i)"] = 1
@@ -377,7 +379,8 @@ struct LinesLesson: PaperLesson {
             return moves + [.tap(.action("Check"))]
         case .corner:
             let at = Pt(s.h("px") ?? q.rest.x, s.h("py") ?? q.rest.y), tg = q.target.at
-            return [.drag(from: CGPoint(x: at.x + 2, y: at.y + 2), to: CGPoint(x: tg.x + 2, y: tg.y + 2))]
+            // held by its middle (it lies up and right of its corner)
+            return [.drag(from: CGPoint(x: at.x + 3, y: at.y - 3), to: CGPoint(x: tg.x + 3, y: tg.y - 3))]
         case .run:
             return q.lines.enumerated().filter { (s.h("r\($0.offset)") ?? 0) == 0 }.map { (_, ln) in
                 .drag(from: c(ln.at(ln.t1)), to: c(ln.at(min(ln.hi, ln.t1 + 6))))

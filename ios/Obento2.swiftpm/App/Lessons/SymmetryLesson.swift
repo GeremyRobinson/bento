@@ -20,17 +20,20 @@ struct SymmetryLesson: PaperLesson {
     /// Where the shape's middle goes (a grid point, with room round it for every line that can be drawn through it,
     /// each reaching 2 squares past the shape), and the column the names and the record start on.
     struct G {
-        let O: Pt, rx: Double, local: [Pt]
+        let O: Pt, rx: Double, local: [Pt], bottom: Double
         init(_ p: Symmetry4.Parts) {
             local = p.local
             let angles = p.kind == 0 ? [p.la] : Symmetry4.snaps(p.S, turn: p.turn)
-            var rxm = local.map { abs($0.x) }.max() ?? 14, rym = local.map { abs($0.y) }.max() ?? 14
-            for a in angles {
-                let (f, b) = G.reach(local, a), l = max(f, b)
-                rxm = max(rxm, l * abs(cos(a * .pi / 180))); rym = max(rym, l * abs(sin(a * .pi / 180)))
-            }
-            O = Pt(rxm.rounded(.up), rym.rounded(.up))
-            rx = ((O.x + rxm + 3) / 5).rounded(.up) * 5
+            // the shape, and wherever a fold can land it: over the dashed line, or (drawing fold lines) anywhere round
+            // its middle, as far out as its farthest corner; and every fold line's ends
+            var pts = p.kind == 0 ? local + local.map { Symmetry4.refl($0, p.la) } : local
+            if p.kind == 1 { let r = local.map { hypot($0.x, $0.y) }.max() ?? 14; pts += [Pt(r, 0), Pt(-r, 0), Pt(0, r), Pt(0, -r)] }
+            for a in angles { let (f, b) = G.reach(local, a); pts += [Geo4.pol(Pt(0, 0), f, a), Geo4.pol(Pt(0, 0), b, a + 180)] }
+            let left = -(pts.map(\.x).min() ?? -14), right = pts.map(\.x).max() ?? 14
+            let top = -(pts.map(\.y).min() ?? -14), low = pts.map(\.y).max() ?? 14
+            O = Pt(left.rounded(.up), top.rounded(.up))
+            bottom = O.y + low.rounded(.up)
+            rx = ((O.x + right + 3) / 5).rounded(.up) * 5
         }
         /// How far a fold line at angle a runs from the middle each way: to where it leaves the shape, and a square on.
         static func reach(_ pts: [Pt], _ a: Double) -> (Double, Double) {
@@ -48,19 +51,19 @@ struct SymmetryLesson: PaperLesson {
         }
         func at(_ q: Pt) -> Pt { Pt(q.x + O.x, q.y + O.y) }
         func ends(_ a: Double) -> (Pt, Pt) { let (f, b) = G.reach(local, a); return (Geo4.pol(O, f, a), Geo4.pol(O, b, a + 180)) }
-        var bottom: Double { 2 * O.y }
     }
     private func found(_ h: Numbers) -> [Double] { (0..<8).compactMap { h["f\($0)"] } }
 
     /// A polygon as a fill and an outline, from where it starts (`from`, when it moves in) to where it is.
-    private func shape(_ pen: inout GridPen, _ g: G, _ id: String, _ pts: [Pt], fill: Sketch.Colour, from: [Pt]? = nil) {
-        let o = pts.map(g.at)
-        if let f = from?.map(g.at) {
-            pen.sketch.from[id + "f"] = .fill(f.map { G8.cg(pen, $0) })
-            pen.sketch.from[id + "o"] = .line((f + [f[0]]).map { G8.cg(pen, $0) }, width: Sketch.stroke, dashed: false)
+    /// `over`: a half folded over the rest (it lies on top of the paper under it, its outline too).
+    private func shape(_ pen: inout GridPen, _ g: G, _ id: String, _ pts: [Pt], fill: Sketch.Colour, from: [Pt]? = nil, over: Bool = false) {
+        let o = pts.map(g.at).map { G8.cg(pen, $0) }, ring = o + (o.first.map { [$0] } ?? [])
+        if let f = from?.map(g.at).map({ G8.cg(pen, $0) }) {
+            pen.sketch.from[id + "f"] = over ? .plate(f) : .fill(f)
+            pen.sketch.from[id + "o"] = over ? .overLine(f + [f[0]], width: Sketch.stroke) : .line(f + [f[0]], width: Sketch.stroke, dashed: false)
         }
-        G8.fill(&pen, id + "f", o, fill)
-        G8.path(&pen, id + "o", o, .ink, closed: true)
+        if over { pen.sketch.plate(id + "f", o, fill); pen.sketch.overLine(id + "o", ring, .ink, width: Sketch.stroke) }
+        else { pen.sketch.polygon(id + "f", o, fill); pen.sketch.line(id + "o", ring, .ink, width: Sketch.stroke) }
         pen.sketch.from = [:]
     }
     /// Green dots on the corners that land on a corner; rings round the ones that stick out.
@@ -71,7 +74,10 @@ struct SymmetryLesson: PaperLesson {
         for (i, q) in land.enumerated() {
             let c = g.at(q)
             if local.contains(where: { Geo4.dist($0, q) < 0.05 }) { pen.dot("ok\(i)", at: c.x, c.y, radius: 0.45, Bars.green, over: true) }
-            else { pen.circle("out\(i)", at: c.x, c.y, radius: 0.9, .ink) }
+            else {
+                let r = 0.9, pts = (0...32).map { k -> CGPoint in let t = Double(k) / 32 * 2 * .pi; return pen.P(c.x + r * cos(t), c.y + r * sin(t)) }
+                pen.sketch.overLine("out\(i)", pts, .ink, width: Sketch.stroke)
+            }
         }
     }
 
@@ -84,22 +90,22 @@ struct SymmetryLesson: PaperLesson {
             let la = p.la, kept = s.run.kept
             if st == 1 && held, let th = s.h("th"), let sd = s.h("sd") {
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&live, g, "move", Symmetry4.half(local, la, sd).map { Symmetry4.folded($0, la, th) }, fill: .tint(0.45))
+                shape(&live, g, "move", Symmetry4.half(local, la, sd).map { Symmetry4.folded($0, la, th) }, fill: .tint(0.45), over: true)
             } else if st == 1, let back = s.h("back"), let sd = s.h("sd") {
                 // let go short of the line: the half falls back flat
                 let h = Symmetry4.half(local, la, sd)
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&pic, g, "back\(Int(back * 100))", h, fill: .tint(0.2), from: h.map { Symmetry4.folded($0, la, back) })
+                shape(&pic, g, "back\(Int(back * 100))", h, fill: .tint(0.2), from: h.map { Symmetry4.folded($0, la, back) }, over: true)
             } else if st == 2 {
                 let sd = kept["sd"] ?? 1, th = kept["th"] ?? .pi, h = Symmetry4.half(local, la, sd)
                 shape(&pic, g, "stay\(sd)", Symmetry4.half(local, la, -sd), fill: .tint(0.2))
-                shape(&pic, g, "landed", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h.map { Symmetry4.folded($0, la, th) })
+                shape(&pic, g, "landed", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h.map { Symmetry4.folded($0, la, th) }, over: true)
                 landing(&pic, g, p, la, sd)
                 G8.aside(&pic, "fd", p.landed(sd), x: rx, y: 2, w: 20)
             } else if done {
                 let sd = kept["sd"] ?? 1, h = Symmetry4.half(local, la, sd)
                 shape(&pic, g, "whole", local, fill: .tint(0.2))
-                shape(&pic, g, "unfold", h, fill: .tint(0.2), from: h.map { Symmetry4.refl($0, la) })
+                shape(&pic, g, "unfold", h, fill: .tint(0.2), from: h.map { Symmetry4.refl($0, la) }, over: true)
             } else {
                 shape(&pic, g, "whole", local, fill: .tint(0.2))
             }
@@ -115,7 +121,7 @@ struct SymmetryLesson: PaperLesson {
                 // the last fold, landed: its half glides over the line
                 let n = Int(s.h("fc") ?? 0), h = Symmetry4.half(local, la, 1)
                 shape(&pic, g, "stay\(n)", Symmetry4.half(local, la, -1), fill: .tint(0.2))
-                shape(&pic, g, "fold\(n)", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h)
+                shape(&pic, g, "fold\(n)", h.map { Symmetry4.refl($0, la) }, fill: .tint(0.45), from: h, over: true)
                 landing(&pic, g, p, la, 1)
             } else {
                 shape(&pic, g, "whole", local, fill: .tint(0.2))

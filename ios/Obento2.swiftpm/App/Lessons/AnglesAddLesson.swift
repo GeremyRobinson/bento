@@ -121,7 +121,7 @@ struct AnglesAddLesson: PaperLesson {
         let q = Q(s.numbers), p = q.p, at = G8.stage(s), C = q.C
         if p.fold == 0 && (at == 1 || at == 2) {
             let c = Pt(s.h("px") ?? q.pcRest.x, s.h("py") ?? q.pcRest.y)
-            return [.drag(from: CGPoint(x: c.x + 3, y: c.y + 3), to: CGPoint(x: C.x + 3, y: C.y + 3))]
+            return [.drag(from: CGPoint(x: c.x + 3, y: c.y - 3), to: CGPoint(x: C.x + 3, y: C.y - 3))]
         }
         if p.fold == 1 && at == 1 {
             let c = Pt(s.h("px") ?? q.prRest.x, s.h("py") ?? q.prRest.y)
