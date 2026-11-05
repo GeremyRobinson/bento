@@ -40,7 +40,7 @@ struct Equiv3Lesson: PaperLesson {
             let t = "\(m) \(Fr3.pname(m, P.d))"
             if m > 0 { F3P.beside(&live, "ro\(m)", t, x: Self.W + 1.5, y: Y2) }
             if s.grabbed { live.reads(t) }
-            if ring { KK.hintBox(&pic, "hr", x: Double(P.a - 1) * t1, y: Y2 - 2, w: t1, h: 2) }
+            if ring { KK.hintBox(&pic, "hr", x: X1 - max(t1, t2), y: Y2 - 2, w: max(t1, t2), h: 2) }
             if spot { pic.circle("hs", at: X1, Y2, radius: 1.3, .chapter, dashed: true) }
         } else {
             pic.dot("pB", at: X2, Y2, radius: 0.5, .chapter, over: true)

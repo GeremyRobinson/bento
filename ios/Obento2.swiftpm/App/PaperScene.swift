@@ -297,6 +297,7 @@ extension Piece {
         case "g3-unitfrac": return [box(0, 3, 2, 3), box(2, 0, 2, 2)]           // the shading, and the part slid up
         case "g3-fracline": return [box(5.6, 3.6, 0.8, 0.8)]                    // the point
         case "g3-equiv": return [box(3.6, 1.6, 0.8, 0.8), box(3.6, 5.6, 0.8, 0.8)] // the same point on both lines
+        case "g3-fraccompare": return [box(0, 0, 6, 2), box(0, 3, 5, 2)]        // 3/4 and 5/8 shaded
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -711,6 +712,10 @@ extension Piece {
             var out: [[CGPoint]] = [line((0, 2), (8, 2)), line((0, 6), (8, 6)), line((4, 2.6), (4, 5.4))]
             for i in 0...2 { out.append(line((Double(i) * 4, 1.2), (Double(i) * 4, 2))) }
             for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 5.2 : 5.5), (Double(i) * 2, 6))) }
+            return out
+        case "g3-fraccompare": // fourths over eighths, 3/4 shaded over 5/8, the shading's end dropped dashed: 8 by 6
+            var out: [[CGPoint]] = bar(0, 0, 8, 4) + bar(0, 3, 8, 8)
+            out.append(line((6, 5.5), (6, 6)))
             return out
         case "g3-split", "g3-three", "g3-double", "g3-mult10":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
