@@ -19,13 +19,13 @@ final class Fractions3Tests: XCTestCase {
 
     func testStrips() {
         let x = ShapeParts3.strips(W: 4, H: 6, b: 4), P = ShapeParts3.Parts(x)
-        XCTAssertEqual(P.c, 5)
+        XCTAssertEqual(P.c, 4)
         XCTAssertEqual(P.cutText(2), "2 parts of 12")
         XCTAssertEqual(P.cutText(3), "1 part of 18, 1 of 6")
         XCTAssertEqual(P.cutDone, "fourths: 6 squares each")
         var l = LessonRun(ShapeParts3.spec, numbers: x)
         XCTAssertEqual(l.steps.count, 4)
-        XCTAssertEqual(l.words.say, "Cut it into 4 equal parts.")
+        XCTAssertEqual(l.words.say, "Cut it into 4 equal parts. 1 square unit is 4 × 4 squares here.")
         XCTAssertEqual(move(&l, ["k": 2]), .notYet("That's 2 equal parts. Cut 4."))
         XCTAssertEqual(move(&l, ["k": 3]), .notYet("The last part is 6 squares. The other is 18."))
         XCTAssertEqual(move(&l, ["k": 1]), .moved(1))
