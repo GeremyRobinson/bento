@@ -677,12 +677,26 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   each lesson on the iPad simulator (`page-g3-graphs-0 -partial -numbers type=1,scale=10,theme=2,c0=35,c1=20,c2=50,c3=15,ask=1,x=0,y=1`
   etc.), fix sizes to 75%+ (`-shot zooms -ids g3-graphs,g3-drawgraph,g3-lineplot`), then add the three specs to `Lessons.all`.
 
-- 3rd grade chapter 6, Time and measuring, in progress (4 Nov): Core done with tests (`Measure3`: `Ms3` clock times and
-  pairs of boxes, `Clock3` g3-clock, `Elapsed3` g3-elapsed, `MStory3` the measuring stories, `Mass3` g3-mass, `Liters3` g3-liters;
-  `Measure3Tests`), as the preview (`design/prototype/grade3-ch6.html`) word for word. Left: every App picture (none yet; the specs
-  aren't in `Lessons.all`, so the chapter stays off the map). Plan: a jug a liter 2/4/8 squares (40 tall, grade3.md's; the
-  preview's 1/3/6 was smaller than 75% needs), the preview's grey notes folded into the first line ("1 cell is 10 g."), no 3D How
-  to (the preview has none). Unit fractions' slid part now glides home at the end (fixed 4 Nov).
+- 3rd grade chapter 6, Time and measuring, is built (4 Nov; Core: `Measure3` (`Ms3` clock times, pairs of boxes, `Clock3` g3-clock,
+  `Elapsed3` g3-elapsed, `MStory3` the measuring stories, `Mass3` g3-mass, `Liters3` g3-liters), tests `Measure3Tests`; App:
+  `Clock3Lesson`, `Elapsed3Lesson`, `Mass3Lesson`, `Liters3Lesson`, their shared `MeasureKit3` (`MS3`: the preview's drawings of
+  things read from their SVG paths, choice blocks, hops up and along a line; `MSP`: the stories' cells, slid, dragged down or dealt)).
+  As the preview (`design/prototype/grade3-ch6.html`), its words, slips and generators word for word; typed with the iPad's keys; the
+  grey notes folded into the line ("Pick what to do. 1 cell is 10 g.", "Hop up from 0 to the first label. 1 liter is 3 squares tall
+  here."). Departures: Elapsed time's 5 minutes is 3, 2 or 1 squares (the biggest that keeps the line within 70 squares; the design's
+  1 left a 2-hour line 24 squares); the jug keeps the preview's 1, 3 or 6 squares a liter (grade3.md's 2/4/8, 40 tall, showed at 61%);
+  a story's pile uses 3-square cells only up to 8 rows and its four picks stand in a column beside a tall pile; the stories' live
+  readout is in the pill only (beside the picture it would widen it past 75%); no 3D How to for Liters (the preview has none); the
+  needle morphs (swings) rather than turning about its hub. Hints: a first miss rings the short hand, the hour line's five, the
+  stretch to hop, both scales, the tags or the picks; a second the number, the minute, the landing place, the right scale or tag,
+  or the count. Least zooms: 88%, 83%, 77%, 76%; keys up 75%. Shots need `-partial` only while a chapter is unbuilt; e.g.
+  `page-g3-clock-1 -numbers kind=0,h=9,m=47 -drag 0.5,25,40,25 -hold`, `page-g3-clock-0 -numbers kind=1,h=4,m=23 -path 30,4,36,6,38,12
+  -hold`, `page-g3-elapsed-3 -numbers kind=0,start=495,end=650 -wrong -keypad`, `page-g3-elapsed-1 -numbers kind=1,start=945,len=50`,
+  `page-g3-mass-0 -numbers kind=0,thing=4 -drag 5,14,20,7 -hold` (`-showme -pause 2 -slow 1.5` filmed), `page-g3-mass-2 -numbers
+  kind=1,unit=0,step=10,value=130 -wrong2`, `page-g3-mass-0 -numbers kind=2,op=0,a=440,b=400,unit=0,who=4 -wrong2`,
+  `page-g3-liters-0 -numbers kind=0,cap=10,step=2,value=8 -drag 7.5,30,7.5,24 -hold`, `page-g3-liters-0 -numbers kind=2,t=1,p=1 -wrong`.
+  Unit fractions' slid part now glides home at the end (fixed 4 Nov). Rough: with the keys up a story's first words can be cut at the
+  frame's left (the camera is on the line being typed); a held thing's home copy fades out as the finger lifts it.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
