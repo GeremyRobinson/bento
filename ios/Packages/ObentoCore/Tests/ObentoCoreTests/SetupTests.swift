@@ -53,7 +53,7 @@ final class SetupTests: XCTestCase {
     func testGrades() {
         XCTAssertEqual(Grades.all.count, 13)
         XCTAssertEqual(Grades.all.map(Grades.short), ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"])
-        XCTAssertEqual(Grades.all.filter(Grades.isLive), [0, 1, 2, 4, 5, 6])
+        XCTAssertEqual(Grades.all.filter(Grades.isLive), [0, 1, 2, 3, 4, 5, 6])
         XCTAssertEqual(Grades.name(0), "Kindergarten")
         XCTAssertEqual(Grades.name(1), "1st grade")
         XCTAssertEqual(Grades.name(2), "2nd grade")
@@ -62,9 +62,9 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(Grades.name(11), "11th grade")
         XCTAssertEqual(Grades.name(12), "12th grade")
         XCTAssertEqual(Grades.picked(5), "5th grade")
-        XCTAssertEqual(Grades.picked(3), "3rd grade is coming soon")
+        XCTAssertEqual(Grades.picked(7), "7th grade is coming soon")
         XCTAssertEqual(Grades.picked(0), "Kindergarten")
-        XCTAssertEqual(Grades.picked(1), "1st grade"); XCTAssertEqual(Grades.picked(2), "2nd grade"); XCTAssertEqual(Grades.picked(3), "3rd grade is coming soon")
+        XCTAssertEqual(Grades.picked(1), "1st grade"); XCTAssertEqual(Grades.picked(2), "2nd grade"); XCTAssertEqual(Grades.picked(7), "7th grade is coming soon")
         XCTAssertEqual(Grades.onMe(5), "5th grade")
         XCTAssertEqual(Grades.onMe(8), "8th grade is coming soon")
     }

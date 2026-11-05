@@ -101,6 +101,30 @@ public enum Curriculum {
             MapLesson("g2-shapes", "Sides and corners"), MapLesson("g2-solids", "Faces, edges and corners"), MapLesson("g2-shares", "Halves, thirds and fourths")]),
     ]
 
+    /// 3rd grade (design/grade3.md): 28 lessons in 7 chapters, in teaching order. Chapter 1 is built (4 Nov): only built chapters are on the map.
+    static let grade3: [MapChapter] = [
+        MapChapter("g3-muldiv", "Multiply and divide", colour: "whole", [
+            MapLesson("g3-facts", "Multiplication facts"), MapLesson("g3-divfacts", "Division facts"), MapLesson("g3-unknown", "Find the missing number"),
+            MapLesson("g3-twostep", "Two-step word problems")]),
+        MapChapter("g3-tricks", "Times-table tricks", colour: "whole", [
+            MapLesson("g3-split", "Multiply by breaking apart"), MapLesson("g3-three", "Multiply three numbers"), MapLesson("g3-double", "Double a fact"),
+            MapLesson("g3-mult10", "Multiply by multiples of 10")]),
+        MapChapter("g3-place", "Place value", colour: "decimals", [
+            MapLesson("g3-round", "Rounding to 10 and 100"), MapLesson("g3-addsub", "Add and subtract within 1000"), MapLesson("g3-estimate", "Estimate to check")]),
+        MapChapter("g3-shapes", "Shapes and area", colour: "geometry", [
+            MapLesson("g3-quads", "Quadrilaterals"), MapLesson("g3-area", "Area by counting squares"), MapLesson("g3-lshape", "Area of L-shapes"),
+            MapLesson("g3-perim", "Perimeter"), MapLesson("g3-perimarea", "Same perimeter, different area")]),
+        MapChapter("g3-fractions", "Fractions", colour: "fractions", [
+            MapLesson("g3-shapeparts", "Equal parts of a shape"), MapLesson("g3-unitfrac", "Unit fractions"), MapLesson("g3-fracline", "Fractions on a number line"),
+            MapLesson("g3-equiv", "Equal fractions"), MapLesson("g3-fraccompare", "Comparing fractions")]),
+        MapChapter("g3-measure", "Time and measuring", colour: "measurement", [
+            MapLesson("g3-clock", "Time to the minute"), MapLesson("g3-elapsed", "Elapsed time"), MapLesson("g3-mass", "Grams and kilograms"),
+            MapLesson("g3-liters", "Liters")]),
+        MapChapter("g3-data", "Data", colour: "decimals", [
+            MapLesson("g3-graphs", "Scaled picture and bar graphs"), MapLesson("g3-drawgraph", "Draw a bar graph"),
+            MapLesson("g3-lineplot", "Line plots with halves and fourths")]),
+    ]
+
     /// 4th grade (design/grade4.md): 35 lessons in 8 chapters, in teaching order. All 8 chapters are built (3 Nov).
     static let grade4: [MapChapter] = [
         MapChapter("g4-big", "Big numbers", colour: "whole", [
@@ -156,7 +180,7 @@ public enum Curriculum {
 
     /// A grade's chapters, in order (none for a grade with no map yet).
     public static func chapters(_ grade: Int) -> [MapChapter] {
-        switch grade { case 0: gradeK; case 1: grade1; case 2: grade2; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
+        switch grade { case 0: gradeK; case 1: grade1; case 2: grade2; case 3: grade3; case 4: grade4; case 5: grade5; case 6: grade6; default: [] }
     }
     /// A lesson is built when the app has its spec.
     public static func built(_ id: String) -> Bool { Lessons.spec(id) != nil }

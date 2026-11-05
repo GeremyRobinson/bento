@@ -270,6 +270,11 @@ extension Piece {
             if id == "g2-shapes" { return [[q(2.5, 0), q(5, 2), q(4, 5), q(1, 5), q(0, 2)]] }   // the pentagon, its corners counted
             return [[q(6.5, 1), q(9.5, 1), q(10.5, 2.5), q(7.5, 2.5)]]                              // a face counted
         case "g2-shares": return [box(0, 0, 10.0 / 3, 6), box(10.0 / 3, 0, 10.0 / 3, 6)] // 2 thirds, shaded
+        // 3rd grade, Multiply and divide (4 Nov)
+        case "g3-facts": return [box(0, 4, 10, 2)]                              // the row just dragged down
+        case "g3-divfacts": return [box(6, 0, 4, 6)]                            // the rows shared into
+        case "g3-unknown": return [box(7.5, 2, 2.5, 2)]                         // the missing number's box
+        case "g3-twostep": return [box(6, 4, 4, 2)]                             // the ones slid away
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -619,6 +624,26 @@ extension Piece {
         case "g2-solids": // a box standing in the tilted view, its hidden edges dashed: 11 by 6
             return [box(1, 2.5, 6, 3.5), line((1, 2.5), (2.5, 1), (8.5, 1), (7, 2.5)), line((8.5, 1), (8.5, 4.5), (7, 6)),
                     line((7.5, 5.4), (9.5, 0.5), (11, 4.6), (7.5, 5.4)), line((9.5, 0.5), (10, 5.8))]
+        case "g3-facts", "g3-divfacts", "g3-unknown", "g3-twostep":
+            func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
+            var out: [[CGPoint]] = []
+            switch id {
+            case "g3-facts": // three rows of five dots, the bottom row just made: 10 by 6
+                out.append(box(0, 0, 10, 6))
+                for r in 0..<3 { for c in 0..<5 { out.append(dot(1 + 2 * Double(c), 1 + 2 * Double(r))) } }
+            case "g3-divfacts": // a pile on the left, shared into three rows on the right: 10 by 6
+                for r in 0..<2 { for c in 0..<3 { out.append(dot(0.5 + 1.5 * Double(c), 0.8 + 1.5 * Double(r))) } }
+                out.append(box(6, 0, 4, 6))
+                for r in 0..<3 { out.append(line((6, 2 * Double(r)), (10, 2 * Double(r)))); for c in 0..<2 { out.append(dot(7 + 2 * Double(c), 1 + 2 * Double(r))) } }
+            case "g3-unknown": // an array, its total in a bracket, a side's name an empty box: 10 by 6
+                out.append(box(0, 0, 6, 6))
+                for r in 0..<3 { for c in 0..<3 { out.append(dot(1 + 2 * Double(c), 1 + 2 * Double(r))) } }
+                out.append(line((6.8, 0), (7.2, 0), (7.2, 6), (6.8, 6))); out.append(box(7.5, 2, 2.5, 2))
+            default: // packs of dots, the last few crossed out: 10 by 6
+                for r in 0..<3 { out.append(box(0, 2 * Double(r), 10, 2)); for c in 0..<5 { out.append(dot(1 + 2 * Double(c), 1 + 2 * Double(r))) } }
+                for c in 3..<5 { out.append(line((0.4 + 2 * Double(c), 5.6), (1.6 + 2 * Double(c), 4.4))) }
+            }
+            return out
         case "g2-shares": // a rectangle cut straight down into thirds: 10 by 6
             return [box(0, 0, 10, 6), line((10.0 / 3, 0), (10.0 / 3, 6)), line((20.0 / 3, 0), (20.0 / 3, 6))]
         case "g2-makegraph", "g2-bargraph", "g2-lineplot":
