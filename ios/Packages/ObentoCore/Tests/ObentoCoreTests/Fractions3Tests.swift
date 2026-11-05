@@ -64,7 +64,7 @@ final class Fractions3Tests: XCTestCase {
                 let P = ShapeParts3.Parts(n)
                 XCTAssertTrue(P.T >= 12 && P.T <= 48 && P.T % P.b == 0)
                 XCTAssertEqual(P.sizes.reduce(0, +), P.T)
-                XCTAssertEqual(P.c, 5)
+                XCTAssertEqual(P.c, P.H * 5 <= 25 ? 5 : 4)
                 if i < 3 { XCTAssertTrue(P.strips && P.b <= 4) }
                 if P.strips { XCTAssertEqual(P.W % P.b, 0) } else { XCTAssertTrue(i % 2 == 1 && i >= 3) }
             }
