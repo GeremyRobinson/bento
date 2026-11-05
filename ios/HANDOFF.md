@@ -657,6 +657,25 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   filmed), `page-g3-fracline-0 -numbers a=5,b=6,w=1 -drag 0,7,40,7 -hold`, `page-g3-equiv-0 -numbers kind=0,a=3,b=4,d=8 -wrong2`,
   `page-g3-fraccompare-0 -numbers a=1,b=2,c=2,d=4 -drag 48,22,13,22 -hold`. Area by counting squares (fixed 4 Nov): the live tint lies
   over the picture, so the tiles it fills draw their lines on it too, row by row as they're dragged.
+- 3rd grade chapter 7, Data, is being built (4 Nov; Core: `Data3` (the four graphs' themes, scales 2, 5 and 10, what a row or bar
+  can show, picture and line words; `Graphs3` g3-graphs, `DrawGraph3` g3-drawgraph, `LinePlot3` g3-lineplot), tests `Data3Tests`;
+  App: `Graphs3Lesson`, `DrawGraph3Lesson`, `LinePlot3Lesson`, their shared `DataKit3` (`DK3`: the graph (names left of column 10,
+  rows 4 tall 6 apart, the scale a line every 6 squares 0–8 or the key, the record 3 rows under), the pictures (2nd grade's plus a
+  star and a paw; half a picture is its left half, cut at its middle), bars, the how-many-more marks, the fourths ruler, X's, the
+  things measured)). Pink. As the preview (`design/prototype/grade3-ch7.html`), its words, slips and generators word for word;
+  typed with the iPad's keys. Scaled graphs: tap the key (every picture sits up and says what it's worth) or the scale (its numbers
+  light); drag along a row ("4 pictures and a half") or a line from a bar's end to the scale (half lines, "40 | 50"; short of
+  the scale: "Drag the line all the way down to the scale."); `4 × 2 + 1 = [9]` or `Dogs: [45]`, the second row beside, `35 − 20 =
+  [15]` under them (the dashed line and the bracket). Draw a bar graph: each row's name and count at its left; drag a bar's open
+  edge (half lines for 2 and 10, whole lines for 5; "35 dogs") or tap pictures in (the last tapped again: a half for a key of 2,
+  then gone); a row past its count is a miss; ticks; then the question(s). Line plots: measure (tap the inch, hop the fourths or
+  halves, `[2] [3]/[4] inches`); the plot (tap where each of three X's goes, the rest drop in one by one; tap the stack and write,
+  or tap the tallest and the record writes its length). Hints: a first miss rings the key or scale, the row, the stretch or the
+  plot; a second the key's picture, the row's end or the scale number, the mark, the stack, or writes the number by the box.
+  Departure: "half an apple" (the preview's "half a apple"). **Status:** Core tests green; the App files typecheck; not yet
+  checked on the simulator, so the specs aren't in `Lessons.all` yet (the map shows chapter 7 only with `-partial`). Left: run
+  each lesson on the iPad simulator (`page-g3-graphs-0 -partial -numbers type=1,scale=10,theme=2,c0=35,c1=20,c2=50,c3=15,ask=1,x=0,y=1`
+  etc.), fix sizes to 75%+ (`-shot zooms -ids g3-graphs,g3-drawgraph,g3-lineplot`), then add the three specs to `Lessons.all`.
 
 - 3rd grade chapter 6, Time and measuring, in progress (4 Nov): Core done with tests (`Measure3`: `Ms3` clock times and
   pairs of boxes, `Clock3` g3-clock, `Elapsed3` g3-elapsed, `MStory3` the measuring stories, `Mass3` g3-mass, `Liters3` g3-liters;
