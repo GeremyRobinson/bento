@@ -315,6 +315,7 @@ enum PaperLessons {
         // 3rd grade, Multiply and divide (4 Nov 2026)
         case "g3-facts": return Facts3Lesson()
         case "g3-divfacts": return DivFacts3Lesson()
+        case "g3-unknown": return Unknown3Lesson()
         default: return nil
         }
     }
