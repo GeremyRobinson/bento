@@ -275,6 +275,11 @@ extension Piece {
         case "g3-divfacts": return [box(6, 0, 4, 6)]                            // the rows shared into
         case "g3-unknown": return [box(7.5, 2, 2.5, 2)]                         // the missing number's box
         case "g3-twostep": return [box(6, 4, 4, 2)]                             // the ones slid away
+        // 3rd grade, Times-table tricks (4 Nov)
+        case "g3-split": return [box(0, 0, 6, 6)]                               // the 5 part, lit
+        case "g3-three": return [box(0, 0.5, 10.0 / 3, 2)]                       // a group done first
+        case "g3-double": return [box(0, 0, 10, 2.5)]                           // one half
+        case "g3-mult10": return [box(5, 0.5, 5, 5)]                            // ten tens, a hundred
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -624,6 +629,30 @@ extension Piece {
         case "g2-solids": // a box standing in the tilted view, its hidden edges dashed: 11 by 6
             return [box(1, 2.5, 6, 3.5), line((1, 2.5), (2.5, 1), (8.5, 1), (7, 2.5)), line((8.5, 1), (8.5, 4.5), (7, 6)),
                     line((7.5, 5.4), (9.5, 0.5), (11, 4.6), (7.5, 5.4)), line((9.5, 0.5), (10, 5.8))]
+        case "g3-split", "g3-three", "g3-double", "g3-mult10":
+            func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
+            var out: [[CGPoint]] = []
+            switch id {
+            case "g3-split": // an array cut after 5, the other part a square away: 10 by 6
+                out.append(box(0, 0, 6, 6)); out.append(box(7, 0, 3, 6))
+                for r in 0..<3 { for x in [1.0, 3.0, 5.0, 8.5] { out.append(dot(x, 1 + 2 * Double(r))) } }
+            case "g3-three": // two rows of three groups of two: 10 by 6
+                for r in 0..<2 {
+                    let y = 0.5 + 3 * Double(r)
+                    out.append(box(0, y, 10, 2))
+                    for g in 1..<3 { out.append(line((10 * Double(g) / 3, y), (10 * Double(g) / 3, y + 2))) }
+                    for g in 0..<3 { for d in 0..<2 { out.append(dot(10 * Double(g) / 3 + 0.85 + 1.65 * Double(d), y + 1)) } }
+                }
+            case "g3-double": // four rows cut into two equal halves a square apart: 10 by 6
+                out.append(box(0, 0, 10, 2.5)); out.append(box(0, 3.5, 10, 2.5))
+                for y in [0.65, 1.85, 4.15, 5.35] { for x in 0..<5 { out.append(dot(1 + 2 * Double(x), y, 0.3)) } }
+            default: // ten-frames in rows, ten of them closed into a hundred: 10 by 6
+                for r in 0..<3 { out.append(box(0, 0.5 + 2 * Double(r), 4, 1.5)); out.append(line((2, 0.5 + 2 * Double(r)), (2, 2 + 2 * Double(r)))) }
+                out.append(box(5, 0.5, 5, 5))
+                for r in 1..<5 { out.append(line((5, 0.5 + Double(r)), (10, 0.5 + Double(r)))) }
+                out.append(line((7.5, 0.5), (7.5, 5.5)))
+            }
+            return out
         case "g3-facts", "g3-divfacts", "g3-unknown", "g3-twostep":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
             var out: [[CGPoint]] = []
