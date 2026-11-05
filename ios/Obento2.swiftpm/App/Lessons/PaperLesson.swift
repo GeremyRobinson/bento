@@ -336,6 +336,7 @@ enum PaperLessons {
         case "g3-shapeparts": return ShapeParts3Lesson()
         case "g3-unitfrac": return UnitFrac3Lesson()
         case "g3-fracline": return FracLine3Lesson()
+        case "g3-equiv": return Equiv3Lesson()
         default: return nil
         }
     }
