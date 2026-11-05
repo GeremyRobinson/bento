@@ -576,6 +576,21 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   -drag 17.5,8,17.5,18 -hold`, `page-g3-facts-2 -numbers a=4,b=6 -showme -pause 2 -slow 1.5`, `page-g3-divfacts-0 -numbers b=4,q=6 -wrong2`,
   `page-g3-unknown-1 -numbers a=8,b=6,form=2,flip=1 -wrong2`, `page-g3-twostep-2 -numbers kind=0,a=4,b=6,c=5,who=0 -wrong2`,
   `page-g3-twostep-4 -numbers kind=1,a=9,b=3,c=20,who=2`, `map-started -grade 3`.
+- 3rd grade chapter 2, Times-table tricks, is built (4 Nov; Core: `Tricks3` (`Split3` g3-split, `Three3` g3-three, `Double3` g3-double,
+  `Tens3` g3-mult10), tests `Tricks3Tests`; App: `Split3Lesson`, `Three3Lesson`, `Double3Lesson`, `Tens3Lesson`, their shared `TricksKit3`
+  (`T3`: an array cut in two whose second part glides, the ruler on a stem that snaps between things, a 2-square pick block)). As the
+  preview (`design/prototype/grade3-ch2.html`), its words, slips and generators word for word; typed with the iPad's keys. Departures:
+  cells are the biggest of 5/4/3 squares that fit (Breaking apart a·c ≤ 27, b·c ≤ 30; Double a fact 28 a side; the design's 4 made 8 × 9
+  32 tall); Three's pick and its later words, answers and slips follow the pair tapped (kept "pick", `say(_:)`, `expectKept`), its record
+  starts level with the picture (recordRow 0) and Check stands beside the line; Double a fact always keeps its record beside (Even and
+  Odd are drawn with the record but tapped in the picture's squares); Multiples of 10 has no timed fold step: the fact's right answer
+  folds the tens (frames glide into hundreds in rows of four a square apart, the tens left over start the next hundred) and the next
+  instruction reads "Ten tens make a hundred. Write 4 × 30." (no break inside 4 × 30), and its product is written `= [120]` under the
+  line's = (one line made 9 × 90 too wide). Least zooms: 75%, 77%, 82%, 77%. Shots e.g. `page-g3-split-0 -partial -numbers a=7,b=8 -drag
+  29,0,20,0 -hold`, `page-g3-three-0 -numbers a=3,b=5,c=2 -tapsq 1,1`, `page-g3-double-0 -numbers h=2,n=7 -drag 36,19,36,11 -hold`,
+  `page-g3-double-3 -numbers h=2,n=7 -wrong`, `page-g3-mult10-0 -numbers a=4,t=30 -drag 12.5,5,12.5,14 -hold`, `select-g3-split -grade 3`.
+  Multiplication facts' turn: its grab (3 squares round any corner) is where the corner is drawn; a held drag from the drawn corner
+  (`page-g3-facts-2 -numbers a=4,b=6 -drag 29,19,22,24 -hold`, the cell 4 since 5 a side) grabs and turns.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
