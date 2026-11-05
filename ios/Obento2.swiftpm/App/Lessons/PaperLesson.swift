@@ -319,6 +319,7 @@ enum PaperLessons {
         case "g3-twostep": return TwoStep3Lesson()
         // 3rd grade, Times-table tricks (4 Nov 2026)
         case "g3-split": return Split3Lesson()
+        case "g3-three": return Three3Lesson()
         default: return nil
         }
     }
