@@ -153,8 +153,8 @@ final class Shapes2Tests: XCTestCase {
         XCTAssertEqual(P.cutMiss(Shares2.cutting(g, 2, [Shares2.down(24)], [Shares2.across(12)]).code), "That makes 4 parts. Cut it into 3.")
         // the circle: from the middle out, or across through it, to 30°
         let c = Shares2.geom(2)
-        XCTAssertEqual(Shares2.snap(c, (18, 18), (18, 1)), [Shares2.radius(270)])
-        XCTAssertEqual(Shares2.snap(c, (1, 18), (35, 18)), [Shares2.radius(0), Shares2.radius(180)])
+        XCTAssertEqual(Shares2.snap(c, (15, 15), (15, 1)), [Shares2.radius(270)])
+        XCTAssertEqual(Shares2.snap(c, (1, 15), (29, 15)), [Shares2.radius(0), Shares2.radius(180)])
         XCTAssertEqual(Shares2.snap(c, (2, 2), (10, 3)), [-3])
         var cc = Shares2.cutting(c, 3, [], [Shares2.radius(270)])
         cc = Shares2.cutting(c, 3, cc.cuts, [Shares2.radius(30)])
@@ -163,7 +163,7 @@ final class Shapes2Tests: XCTestCase {
         XCTAssertEqual(Shares2.cutting(c, 3, cc.cuts, [Shares2.radius(120)]).code, -4)
         // the square, corner to corner; not on a rectangle
         let sq = Shares2.geom(1)
-        XCTAssertEqual(Shares2.snap(sq, (1, 1), (35, 35)), [Shares2.d0])
+        XCTAssertEqual(Shares2.snap(sq, (1, 1), (23, 23)), [Shares2.d0])
         XCTAssertEqual(Shares2.cutting(sq, 2, [], [Shares2.d0]).code, 1)
         XCTAssertEqual(Shares2.cutting(g, 2, [], [Shares2.d0]).code, -1)
         // every web cut makes equal parts

@@ -35,7 +35,7 @@ struct Sides2Lesson: PaperLesson {
     }
     static let say = KK.words
 
-    struct Lay {
+    @MainActor struct Lay {
         let P: Sides2.Parts
         var W: Double { ceil(P.w) }
         var H: Double { ceil(P.h) }

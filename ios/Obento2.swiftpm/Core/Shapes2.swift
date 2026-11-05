@@ -2,7 +2,7 @@ import Foundation
 
 /// 2nd grade's chapter 7, Shapes (design/grade2.md chapter 7, the preview design/prototype/grade2-ch7.html): one square is one
 /// step of a side, every corner on a grid crossing; a solid is Unit cubes' (a block is a cube's side); every half, third and
-/// fourth of a whole is a whole number of squares (a rectangle 48 × 24, a square 36 × 36, a circle 36 across). Every line is
+/// fourth of a whole is a whole number of squares (a rectangle 48 × 24, a square 24 × 24, a circle 30 across). Every line is
 /// spoken (App's Voice); the preview's grey second line is folded into the instruction; the one number written (how many parts
 /// make the whole) is typed with the iPad's keys and Check, as the preview types. Its words, slips and generators word for word.
 public enum Shapes2 {
@@ -417,7 +417,7 @@ public enum Solids2 {
 // MARK: - Halves, thirds and fourths
 
 /// Halves, thirds and fourths (g2-shares, the web's; 2.G.A.3). The whole big, a size every cut lands on whole squares: a
-/// rectangle 48 × 24 (halves 24, thirds 16, fourths 12 wide, or a cross of 24 × 12), a square 36 × 36 (18, 12, 9), a circle 36
+/// rectangle 48 × 24 (halves 24, thirds 16, fourths 12 wide, or a cross of 24 × 12), a square 24 × 24 (12, 8, 6), a circle 30
 /// across. Cut with the ruler, edge to edge (straight down or across, snapped to a square; the square corner to corner; the
 /// circle from the middle out, or across through it, to equal turns); the readout gives each part's width (`16 | 16 | 16`;
 /// a circle's or a corner-to-corner's `the same`). Right: the parts number and land on the first. Then the name, shade, and
@@ -470,8 +470,9 @@ public enum Shares2 {
         public var r: Double { W / 2 }
     }
     public static func geom(_ shape: Int, x0: Double = 0, y0: Double = 0, half: Bool = false) -> Geom {
-        if shape == 2 { return Geom(kind: 2, x0: x0, y0: y0, W: 36, H: 36) }
-        if shape == 1 { let s = half ? 24.0 : 36; return Geom(kind: 1, x0: x0, y0: y0, W: s, H: s) }
+        // the square 24 a side and the circle 30 across (centred on a block corner): at the design's 36 they showed at 65–71%
+        if shape == 2 { return Geom(kind: 2, x0: x0, y0: y0, W: 30, H: 30) }
+        if shape == 1 { return Geom(kind: 1, x0: x0, y0: y0, W: 24, H: 24) }
         return half ? Geom(kind: 0, x0: x0, y0: y0, W: 24, H: 12) : Geom(kind: 0, x0: x0, y0: y0, W: 48, H: 24)
     }
     /// The web's cut as lines (the preview's cutSet).
