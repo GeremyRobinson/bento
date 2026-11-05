@@ -7,12 +7,11 @@ import SwiftUI
 /// a square away. The 5 part lights: write `7 × 5 = [35]` (also written under it); then the other part, `7 × 3 = [21]`;
 /// they glide back and `35 + 21 = [56]`. The record: `7 × 8 = 7 × 5 + 7 × 3`, `= 35 + 21`, `= 56`.
 ///
-/// Hand: "grab", "k" the cut the ruler is at (b: resting at the far end).
+/// Hand: "grab", "k" the cut the ruler is at (b: resting at the far end; away from it, the widths ride over the cut).
 @MainActor
 struct Split3Lesson: PaperLesson {
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     private static let X0 = M3.X0, Y0 = M3.Y0
-    var liveKeys: Set<String> { ["k"] }
     func recordBeside(_ n: Numbers) -> Double? { Self.Y0 }
     func recordRow(_ n: Numbers) -> Double? { let P = Split3.Parts(n); return Self.Y0 + Double(P.a * P.c) + 5 }
     private static func ruler(_ P: Split3.Parts) -> T3.Ruler { T3.Ruler(down: true, x: X0, y: Y0, c: Double(P.c), n: P.b, span: P.a) }
@@ -29,12 +28,12 @@ struct Split3Lesson: PaperLesson {
         M3.bracket(&pic, "bl", x: X0 - 1, y1: Y0, y2: Y0 + H, open: false, name: "\(P.a)")
         let ring = s.on("ring") || s.on("spot"), spot = s.on("spot")
         if st == 0 {
-            let k = Int((s.h("k") ?? Double(P.b)).rounded()), held = s.grabbed && k < P.b
+            let k = Int((s.h("k") ?? Double(P.b)).rounded()), held = k < P.b
             // over the top: b, or while the ruler moves the two widths riding over the cut
             if held {
                 live.label("w1", "\(k)", M3.maths.colour(ch), .above, edge: Y0, along: X0 + Double(k) * c / 2)
                 live.label("w2", "\(P.b - k)", M3.maths.colour(ch), .above, edge: Y0, along: X0 + (Double(k) + Double(P.b - k) / 2) * c)
-            } else { pic.label("top", "\(P.b)", M3.maths, .above, edge: Y0, along: X0 + W / 2) }
+            } else { live.label("top", "\(P.b)", M3.maths, .above, edge: Y0, along: X0 + W / 2) }   // live: Show me's ruler hides it too
             Self.ruler(P).draw(&live, k, held: s.grabbed)
             if s.grabbed { live.reads("\(k) | \(P.b - k)") }
             // a miss rings the top edge the ruler slides along; a second dashes the cut after 5
