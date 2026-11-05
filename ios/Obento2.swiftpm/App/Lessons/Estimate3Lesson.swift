@@ -76,10 +76,10 @@ struct Estimate3Lesson: PaperLesson {
                 pic.label("pl\(n)", "\(v)", Self.small, .above, edge: LY - 2.1 - (near && n == 1 ? 2 : 0), along: x)
             }
         }
-        // hints: each number's hundred ringed (a first miss), then the hundred it rounds to (a second)
+        // hints (rings over the line, clear of its numbers): each number's hundred ringed (a first miss), then the hundred it rounds to (a second)
         if st == 0 {
             for (v, g) in [(P.a, gA), (P.b, gB)] where !g {
-                if s.on("spot") { pic.circle("hs\(v)", at: X(P3.rh(v)), LY, radius: 1.3, .chapter, dashed: true) }
+                if s.on("spot") { pic.circle("hs\(v)", at: X(P3.rh(v)), LY - 1, radius: 1.3, .chapter, dashed: true) }
                 else if s.on("ring") { KK.hintBox(&pic, "hr\(v)", x: X(v / 100 * 100), y: LY - 2, w: 5, h: 2) }
             }
         }
@@ -96,8 +96,8 @@ struct Estimate3Lesson: PaperLesson {
                 live = pen
                 if s.grabbed { live.reads("\(G3.count(k, "hop")) · \(P.ra + P.s * k * 100)") }
                 live.dot("hand", at: xs + Double(P.s * k) * 5, LY, radius: 0.55, .ink, over: true)
-                if s.on("spot") { pic.circle("hs", at: X(P.E), LY, radius: 1.3, .chapter, dashed: true) }
-                else if s.on("ring") { pic.circle("hr", at: xs, LY, radius: 1.3, .chapter, dashed: true) }
+                if s.on("spot") { pic.circle("hs", at: X(P.E), LY - 1, radius: 1.3, .chapter, dashed: true) }
+                else if s.on("ring") { pic.circle("hr", at: xs, LY - 1, radius: 1.3, .chapter, dashed: true) }
             } else {
                 pic = pen
                 pic.dot("est", at: X(P.E), LY, radius: 0.4, .chapter, over: true)

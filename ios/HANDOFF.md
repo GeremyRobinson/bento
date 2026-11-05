@@ -591,6 +591,29 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g3-double-3 -numbers h=2,n=7 -wrong`, `page-g3-mult10-0 -numbers a=4,t=30 -drag 12.5,5,12.5,14 -hold`, `select-g3-split -grade 3`.
   Multiplication facts' turn: its grab (3 squares round any corner) is where the corner is drawn; a held drag from the drawn corner
   (`page-g3-facts-2 -numbers a=4,b=6 -drag 29,19,22,24 -hold`, the cell 4 since 5 a side) grabs and turns.
+- 3rd grade chapter 3, Place value, is built (4 Nov; Core: `Place3` (`P3` place names, rounding to hundreds, the web's jumps and
+  generator, `Round3` g3-round, `AddSub3` g3-addsub, `Estimate3` g3-estimate), tests `Place3Tests`; App: `Round3Lesson`, `AddSub3Lesson`,
+  `Estimate3Lesson`). Pink. As the preview (`design/prototype/grade3-ch3.html`), its words, slips and generators word for word; typed
+  with the iPad's keys; the preview's grey lines folded into the instruction (a story's pick: "A farm has 503 apples. … Pick what to
+  do."; Leo's answer on the first and the Yes/No steps: "Leo says 458 + 275 = 633. Drag each number to its nearest hundred."). Rounding:
+  tap the block, it opens into line 2; drag the point (brackets "7 to 340 · 3 to 350"), the hop to the closer end; `347 ≈ [350]`, the
+  place's digit underlined, the next ringed, the rule beside. Add and subtract: the place chart (3-square disks that say their worth,
+  2 frames a column), a place at a time biggest first (`AddSub3.Phase`: pick, slide, close, write, done; `Parts.plan` the opens and
+  closes, a cascade closes twice); taking away with too few, the instruction becomes "Open a hundred: tap one." (`say`), the tapped
+  disk's ten glide out of it (they're stacked under it from the start, `Board.toOpen`); a full ten's disks glide together into the
+  next column; one record line per place, Check beside it (`blocksAt`). Estimate: drag both points, hop, write; Leo's point drops onto
+  the line (`Sketch.from`), the band and the gap bracket draw in after it; Yes and No are drawn blocks answered on the tap. Departures:
+  b's number beside its disks is written tight (call 1), each digit greying alone; the chart's rows a square closer than the preview's
+  (73% → 76% with a 3-jump story); no live column-digit preview beside the readout except the held column's; hint rings over a line
+  sit a square above it, clear of its numbers; checks at i4/i5/i6 + i3 (story) for Add and subtract (every i3 is a story). Least zooms:
+  90%, 76%, 102%; keys up 75%. Shots e.g. `page-g3-round-1 -numbers n=347,to=10 -drag 33.5,14,45,14 -hold`, `page-g3-addsub-1 -numbers
+  a=503,b=7,s=-1,story=1 -tapsq 13.5,4.5,33.5,7.5 -tapgap 1.5`, `page-g3-addsub-6 -numbers a=835,b=178,s=-1,story=1 -wrong -keypad`,
+  `page-g3-estimate-3 -numbers a=458,b=275,s=1,f=633,who=0 -wrong`.
+- Keys-up miss lines (4 Nov, app-wide, `WorkProblem.keysFraming`): written above the line being typed, they now steer clear of the
+  picture's drawn pieces as well as its words (nothing is written over the picture); if climbing past them would drop the line's
+  frame under 75%, the miss goes in the first clear rows under the line (Check included) instead. Checked on Multiples of 10
+  (`page-g3-mult10-2 -numbers a=9,t=90 -wrong -keypad`, 75%), Multiplying decimals (`page-g6-decmult-2 … -wrong -keypad`) and Add and
+  subtract within 1000.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.

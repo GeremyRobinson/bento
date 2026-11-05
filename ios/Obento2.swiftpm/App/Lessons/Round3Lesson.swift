@@ -69,7 +69,7 @@ struct Round3Lesson: PaperLesson {
                     } else { pic = p }
                 }
                 // a second miss: the closer end ringed
-                if s.on("spot"), !s.grabbed { pic.circle("spot", at: P.up ? L : 0, y2, radius: 1.3, .chapter, dashed: true) }
+                if s.on("spot"), !s.grabbed { pic.circle("spot", at: P.up ? L : 0, y2 - 1, radius: 1.3, .chapter, dashed: true) }
             } else if at >= 2 {
                 // where the number was, and its hop to the closer end, how far written over it
                 let end = P.up ? L : 0
