@@ -35,9 +35,9 @@ enum M7 {
     }
     static func width(_ toks: [Tok]) -> Double { widths(toks).reduce(0, +) }
 
-    /// A number or box written before a letter or a bracket (a coefficient: 3x, 2(n + 4)) hugs it: no square's gap.
+    /// A number or box written before a letter, a bracket or a ¢ (a coefficient: 3x, 2(n + 4); [65]¢) hugs it: no square's gap.
     static func hugs(_ toks: [Tok], _ i: Int) -> Bool {
-        guard i + 1 < toks.count, case .t(let s, _) = toks[i + 1], let f = s.first, f.isLetter || f == "(" else { return false }
+        guard i + 1 < toks.count, case .t(let s, _) = toks[i + 1], let f = s.first, f.isLetter || f == "(" || f == "¢" else { return false }
         switch toks[i] { case .n, .box: return true; default: return false }
     }
     /// Each token's whole squares: a hugging box the fewest that fit its answer and a little room for the cursor.
