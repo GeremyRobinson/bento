@@ -18,6 +18,7 @@ final class Tricks3Tests: XCTestCase {
     func testOnTheMap() {
         let ch = Curriculum.chapters(3)[1]
         XCTAssertEqual(ch.title, "Times-table tricks")
+        XCTAssertTrue(Curriculum.built(ch))
         for l in ch.lessons where Curriculum.built(l.id) { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertFalse(Curriculum.voiced(l.id)) }
     }
 
@@ -137,7 +138,7 @@ final class Tricks3Tests: XCTestCase {
         XCTAssertEqual(l.words.say, "Write 4 × 3: how many tens?")
         XCTAssertEqual(move(&l, ["f": 7]), .notYet("× means groups: 4 groups of 3, not 4 + 3."))
         XCTAssertEqual(move(&l, ["f": 12]), .moved(2))
-        XCTAssertEqual(l.words.say, "Ten tens make a hundred. Write 4 × 30.")
+        XCTAssertEqual(l.words.say, "Ten tens make a hundred. Write 4\u{00A0}×\u{00A0}30.")
         XCTAssertEqual(move(&l, ["x": 12]), .notYet("12 is how many tens. Each ten is 10, so 12 tens is 120."))
         XCTAssertEqual(move(&l, ["x": 1200]), .notYet("12 tens is 12 × 10, which is 120. You wrote 12 hundreds."))
         XCTAssertEqual(move(&l, ["x": 34]), .notYet("4 groups of 30 is much more than 4 + 30."))

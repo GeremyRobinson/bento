@@ -321,6 +321,7 @@ enum PaperLessons {
         case "g3-split": return Split3Lesson()
         case "g3-three": return Three3Lesson()
         case "g3-double": return Double3Lesson()
+        case "g3-mult10": return Tens3Lesson()
         default: return nil
         }
     }

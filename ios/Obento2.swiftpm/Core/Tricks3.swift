@@ -21,7 +21,9 @@ public enum Split3 {
         public var P: Int { a * b }
         public var f5: Int { a * 5 }
         public var fr: Int { a * r }
-        public var c: Int { G3.cell(max(a, b)) }
+        /// A thing's cell: the biggest of 5, 4, 3 squares that keeps the array 27 squares tall and 30 wide (so it shows at
+        /// 75% with its record beside it).
+        public var c: Int { [5, 4, 3].first { a * $0 <= 27 && b * $0 <= 30 } ?? 3 }
         public func rowsOf(_ n: Int) -> String { "\(G3.count(a, "row")) of \(n)" }
         public func cut(_ k: Int) -> String { "\(k) | \(b - k). Cut after 5: 5s are easy." }
         public var fiveSlips: [(Int, String)] { [(a + 5, "× means \(G3.count(a, "group")) of 5, not \(a) + 5.")] }
@@ -178,8 +180,9 @@ public enum Double3 {
         public var rows: Int { 2 * h }
         public var half: Int { h * n }
         public var P: Int { 2 * half }
-        /// A thing's cell: 4 squares (the biggest, 8 × 9, is 32 × 36), 5 for a small fact.
-        public var c: Int { max(rows, n) <= 5 ? 5 : 4 }
+        /// A thing's cell: the biggest of 5, 4, 3 squares that keeps the array 28 squares a side (so it shows at 75%
+        /// with its record beside it; the design's 4 made 8 × 9 32 squares tall).
+        public var c: Int { [5, 4, 3].first { rows * $0 <= 28 && n * $0 <= 28 } ?? 3 }
         /// The fact's row of the times table: 4, 8, 12 … 40.
         public var table: [Int] { (1...10).map { $0 * rows } }
         public func cut(_ k: Int) -> String { "\(k * n) and \((rows - k) * n) aren't equal. Find the middle." }
@@ -286,7 +289,9 @@ public enum Tens3 {
             picture: ["at": 1], onMiss: ["ring": 1], hint2: ["spot": 1])
         let tensHint = "Each ten is 10 ones. How much are \(P.f) tens? Count by 10s, or think of \(P.f) in the tens place."
         // the fold's line goes first in the instruction ("Ten tens make a hundred.")
-        let tens = LessonStep(StepWords(say: (P.f >= 10 ? "Ten tens make a hundred. " : "") + "Write \(P.a) × \(P.t).", hint: tensHint, action: "Check"),
+        // (the fact kept on one line when the words wrap: no break inside 4 × 30)
+        let fact2 = P.f >= 10 ? "\(P.a)\u{00A0}×\u{00A0}\(P.t)" : "\(P.a) × \(P.t)"
+        let tens = LessonStep(StepWords(say: (P.f >= 10 ? "Ten tens make a hundred. " : "") + "Write \(fact2).", hint: tensHint, action: "Check"),
             answer: G3.typed("x", P.P, P.tensSlips, hint: tensHint, explain: "\(P.f) tens = \(P.P): write \(P.f), then a 0 for the ones."),
             picture: ["at": 2], onMiss: ["ring": 1], hint2: ["spot": 1])
         let done = LessonStep(StepWords(say: P.why, hint: "", action: "Next problem"), picture: ["at": 3])
