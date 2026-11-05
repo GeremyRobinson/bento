@@ -24,8 +24,7 @@ struct DivFacts3Lesson: PaperLesson {
 
     /// The rows being filled (shared by Two-step's sharing too): faint lines across while sharing, the filled part outlined
     /// row by row, the left side; b down the left in a bracket; the edge to drag; once done, each row's end says q.
-    static func rows(_ pic: inout GridPen, _ live: inout GridPen, sx: Double, y: Double, rows b: Int, k: Int, done: Bool, held: Bool) {
-        let c = Self.c
+    static func rows(_ pic: inout GridPen, _ live: inout GridPen, sx: Double, y: Double, rows b: Int, k: Int, done: Bool, held: Bool, c: Double = Self.c) {
         if !done {
             var segs: [(CGPoint, CGPoint)] = []
             for r in 0...b { segs.append((pic.P(sx, y + Double(r) * c), pic.P(sx + 10 * c, y + Double(r) * c))) }
@@ -44,7 +43,7 @@ struct DivFacts3Lesson: PaperLesson {
         return left >= 0 ? "\(k) in each · \(left) left" : "\(k) in each · \(-left) missing"
     }
     /// Drag the rows' edge across, a column at a time; let go on q, or short (keep going), or past (back to before).
-    static func shareHands(_ s: PaperState, sx: Double, y: Double, rows b: Int, q: Int, box: String) -> Hands {
+    static func shareHands(_ s: PaperState, sx: Double, y: Double, rows b: Int, q: Int, box: String, c: Double = Self.c) -> Hands {
         let k = Int((s.h("k") ?? 0).rounded())
         return Hands(
             grab: { p in M3.onEdge(p, rows: false, x: sx, y: y, at: sx + Double(k) * c, span: Double(b) * c) ? ["grab": 1, "k": Double(k), "k0": Double(k)] : nil },
