@@ -114,7 +114,7 @@ struct Numline2Lesson: PaperLesson {
         // the hops, tens then ones, in the 2 squares over the line
         let c = st == hopAt ? LN2.chain(s, "h") : st > hopAt ? LN2.Chain(f: P.hopFrom, t: P.hopTo) : nil
         if let c {
-            LN2.hops(&pic, "hp", c.f, c.t, x0: 0, per: 1 / G.U, row: LY, height: 0.5, big: 10)
+            LN2.hops(&pic, &live, held: s.grabbed, "hp", c.f, c.t, x0: 0, per: 1 / G.U, row: LY, height: 0.5, big: 10)
             if st == hopAt, c.t != c.f { let ro = Numline2.Parts.readout(from: c.f, to: c.t); EG2.readout(&pic, ro, x: 52, y: LY - 1); if s.grabbed { live.reads(ro) } }
         }
         // hints: a first miss rings the bar (or the bar to hop from), a second the mark it ends on

@@ -28,8 +28,8 @@ struct TwoUnits2Lesson: PaperLesson {
         LN2.ruler(&pic, "ri", x0: 0, y: IY, per: 5, max: P.imax, below: true, lit: lit(ci))
         LN2.ruler(&pic, "rc", x0: 0, y: CY, per: 2, max: P.cmax, lit: lit(cc))
         // the hops: under the inch ruler's marks, over the centimeter ruler's
-        if let ci { LN2.hops(&pic, "hi", ci.f, ci.t, x0: 0, per: 5, row: IY + 3, height: -1.2) }
-        if let cc { LN2.hops(&pic, "hc", cc.f, cc.t, x0: 0, per: 2, row: CY, height: 0.6) }
+        if let ci { LN2.hops(&pic, &live, held: s.grabbed, "hi", ci.f, ci.t, x0: 0, per: 5, row: IY + 3, height: -1.2) }
+        if let cc { LN2.hops(&pic, &live, held: s.grabbed, "hc", cc.f, cc.t, x0: 0, per: 2, row: CY, height: 0.6) }
         if st == 0, let c = ci, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) in", x: W + 2, y: IY + 1.5); if s.grabbed { live.reads("\(abs(c.t - c.f)) in") } }
         if st == 2, let c = cc, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) cm", x: W + 2, y: CY + 1.5); if s.grabbed { live.reads("\(abs(c.t - c.f)) cm") } }
         // hints: a first miss rings the ruler (or both rulers' first space), a second the mark to start on (or one inch)

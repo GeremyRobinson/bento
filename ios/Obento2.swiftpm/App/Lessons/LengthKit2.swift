@@ -158,6 +158,10 @@ enum LN2 {
     static func hopMove(_ p: String, box: String, from: Int, to: Int) -> HandMove {
         HandMove(hand: [:], missHand: [:], set: [(box, Double(Len2.code(from, to)))], keep: [p + "f": Double(from), p + "t": Double(to)], check: true)
     }
+    /// The same, drawn at once with the finger while it's held (live), or drawn in once let go.
+    static func hops(_ pic: inout GridPen, _ live: inout GridPen, held: Bool, _ id: String, _ a: Int, _ b: Int, x0: Double, per: Double, row: Double, height: Double, big: Int = 1) {
+        if held { hops(&live, id, a, b, x0: x0, per: per, row: row, height: height, big: big) } else { hops(&pic, id, a, b, x0: x0, per: per, row: row, height: height, big: big) }
+    }
     /// Hops of one unit from a to b over row `row` (down when height < 0), `per` squares a unit.
     static func hops(_ pen: inout GridPen, _ id: String, _ a: Int, _ b: Int, x0: Double, per: Double, row: Double, height: Double, big: Int = 1, restInOne: Bool = false) {
         for (p, q) in Len2.hops(a, b, big: big, restInOne: restInOne) {

@@ -475,6 +475,19 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   record (beside it the keys covered it). Least zooms: 110%, 76%, 75%; keys up 87%, 76%, 75%. Shots e.g.
   `page-g2-evenodd-0 -numbers n=13,mix=4 -showme -pause 2 -slow 1.5`, `page-g2-evenodd-1 -numbers n=13,mix=4 -wrong`,
   `page-g2-arrays-1 -numbers rows=3,cols=4,story=0 -tapsq 7.5,7.5,12.5,7.5 -tapgap 1`, `page-g2-squares-0 -numbers rows=3,cols=4,first=1 -drag 4,1,4,5.5 -hold`.
+- 2nd grade chapter 4, Length, is built (4 Nov; Core: `Length2` (`Len2` units, a hop's code from × 1000 + to, `Measure2` g2-measure,
+  `TwoUnits2` g2-twounits, `Estimate2` g2-estimate, `Numline2` g2-numline), tests `Length2Tests`; App: `Measure2Lesson`, `TwoUnits2Lesson`,
+  `Estimate2Lesson`, `Numline2Lesson`, their shared `LengthKit2` (`LN2`: the ruler, the preview's things, the measuring pieces, Hop along a
+  ruler: a drag from a mark lays hops a unit at a time, a hop that stops short is kept and a drag from its end goes on; held hops in the live
+  pen, the readout beside the ruler and in the bar)). Amber. As the preview (`design/prototype/grade2-ch4.html`), its words, slips and
+  generators word for word; typed with the iPad's keys. `Spoken` says a unit after a number ("7 cm" is "7 centimeters", "4 in a row" stays).
+  Departures: Estimate's laid clips or cubes stay under the thing while it's measured (the ruler 2 rows lower so the hops clear them), not
+  gone as the ruler comes; its guesses sit just under the thing (not where the record goes); a wrong guess's dashed line stops just past the
+  ruler (24 inches drawn whole was 120 squares); the number line's story is on the picture's top rows with the instruction above it (as
+  chapter 1's stories); past 50 every story number is even (G's call: a square is 2). Least zooms: 90%, 77%, 79%, 80%; keys up 75%+ (Inches
+  and centimeters' long ruler is cut at the keys' edge, its record line in full). Shots e.g. `page-g2-measure-0 -numbers unit=1,th=0,start=2,end=9
+  -drag 4,3.5,14,3.5 -hold`, `page-g2-twounits-4 -numbers inches=8 -wrong`, `page-g2-estimate-1 -numbers fold=1,u=0,thing=2,len=7 -drag
+  0,9.5,30,9.5 -hold`, `page-g2-numline-1 -numbers kind=1,a=45,b=18,th=0,who=0,other=1 -showme -slow 1.5`.
 - Taps (4 Nov, shared): a finger that slips under 12 pt as it taps is one tap (`PaperModel.slip`, `fingerTap`, `cancelGrab`). Before, such
   a tap started a drag: on nothing grabbable it panned the paper (the tap lost once the slip passed the system tap's ~10 pt, and the pan
   coasted, so the next tap only stopped the paper); on a grabbable piece (Hundreds' last ten) the release and the tap both counted.

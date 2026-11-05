@@ -37,7 +37,7 @@ struct Measure2Lesson: PaperLesson {
         let lit = c.map { $0.t != $0.f ? [$0.f, $0.t] : [$0.f] } ?? []
         LN2.ruler(&pic, "r", x0: 0, y: RY, per: P.per, max: P.top, lit: lit)
         // the hops, one space each, over the ruler's top edge
-        if let c { LN2.hops(&pic, "h", c.f, c.t, x0: 0, per: P.per, row: RY, height: P.per > 2 ? 1.2 : 0.6) }
+        if let c { LN2.hops(&pic, &live, held: s.grabbed, "h", c.f, c.t, x0: 0, per: P.per, row: RY, height: P.per > 2 ? 1.2 : 0.6) }
         if st == 0, let c, c.t != c.f {
             let ro = "\(abs(c.t - c.f)) \(P.u)"
             EG2.readout(&pic, ro, x: W + 2, y: RY + 1.5)

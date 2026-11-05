@@ -85,7 +85,8 @@ struct Estimate2Lesson: PaperLesson {
                 p_toolMoved(&pic, P, x: tl + per * last, name: name)
             }
             for (a, b) in hs {
-                pic.hop("h\(a):\(b)", from: X(P, a), to: X(P, b), row: RY, height: min(1.6, per * Double(abs(b - a)) * 0.2))
+                let hh = min(1.6, per * Double(abs(b - a)) * 0.2)
+                if s.grabbed { live.hop("h\(a):\(b)", from: X(P, a), to: X(P, b), row: RY, height: hh) } else { pic.hop("h\(a):\(b)", from: X(P, a), to: X(P, b), row: RY, height: hh) }
                 pic.line("lt\(b)", [(X(P, b), RY + 2), (X(P, b), RY + 2.6)])
                 pic.word("ln\(b)", "\(b)", at: X(P, b), RY + 3.4, KK.lit)
             }
@@ -103,7 +104,7 @@ struct Estimate2Lesson: PaperLesson {
             }
             pic.line("d1", [(tl, TY + 2), (tl, RY)], .ink3, dashed: true)
             pic.line("d2", [(tr, TY + 2), (tr, RY)], .ink3, dashed: true)
-            if let c { LN2.hops(&pic, "h", c.f, c.t, x0: 0, per: per, row: RY, height: per > 2 ? 1.2 : 0.6) }
+            if let c { LN2.hops(&pic, &live, held: s.grabbed, "h", c.f, c.t, x0: 0, per: per, row: RY, height: per > 2 ? 1.2 : 0.6) }
             if st == 1, let c, c.t != c.f { let ro = "\(abs(c.t - c.f)) \(P.u)"; EG2.readout(&pic, ro, x: tr + 1.5, y: TY + 1); if s.grabbed { live.reads(ro) } }
         }
         if st == 1 {
