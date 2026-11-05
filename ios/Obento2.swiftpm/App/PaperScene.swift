@@ -292,6 +292,8 @@ extension Piece {
         case "g3-lshape": return [box(0, 0.5, 6, 5)]                            // one part of the cut
         case "g3-perim": return [box(0, 0.5, 10, 0.5), box(9.5, 0.5, 0.5, 5)]   // the edge walked so far
         case "g3-perimarea": return [box(6, 0.5, 4, 4)]                         // the garden made
+        // 3rd grade, Fractions (4 Nov)
+        case "g3-shapeparts": return [box(0, 0, 2, 5)]                          // the part lifted
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -692,6 +694,8 @@ extension Piece {
                 return out
             default: return grid(0, 1.5, 5, 3) + grid(6, 0.5, 4, 4)                          // two gardens, one fence: 10 by 6
             }
+        case "g3-shapeparts": // a rectangle cut into four equal strips, one lifted a square: 8 by 6
+            return [box(0, 0, 2, 5), line((2, 1), (8, 1), (8, 6), (0, 6), (0, 5)), line((4, 1), (4, 6)), line((6, 1), (6, 6))]
         case "g3-split", "g3-three", "g3-double", "g3-mult10":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
             var out: [[CGPoint]] = []

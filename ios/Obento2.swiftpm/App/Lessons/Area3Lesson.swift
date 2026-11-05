@@ -30,6 +30,12 @@ struct Area3Lesson: PaperLesson {
             else { pic.fill("tr\(i)", col: X0, row: Y0 + Double(i) * c, w: L, h: c, S3P.tint) }
         }
         S3P.tiles(&pic, "g", x: X0, y: Y0, rows: P.w, cols: P.l, c: c)
+        // (the live tint lies over the picture, so the tiles it fills keep their lines over it: every tile can be counted)
+        if st == 0, laid > 1 { S3P.tiles(&live, "lg0_", x: X0, y: Y0, rows: 1, cols: laid, c: c, outline: false) }
+        if st == 1, rows > 1 {
+            S3P.tiles(&live, "lg", x: X0, y: Y0 + c, rows: rows - 1, cols: P.l, c: c, outline: false)
+            live.sketch.segments("lgt\(rows)", [(live.P(X0, Y0 + c), live.P(X0 + L, Y0 + c))], .ink3, width: 1)
+        }
         pic.label("lt", P.nm(P.l), S3P.name, .above, edge: Y0, along: X0 + L / 2)
         pic.label("ll", P.nm(P.w), S3P.name, .left, edge: X0, along: Y0 + H / 2)
         // the rows count by l at the right end, each at its row's middle (the last once it's written)

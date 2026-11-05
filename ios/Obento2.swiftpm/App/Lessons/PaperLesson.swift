@@ -332,6 +332,8 @@ enum PaperLessons {
         case "g3-lshape": return LShape3Lesson()
         case "g3-perim": return Perim3Lesson()
         case "g3-perimarea": return PerimArea3Lesson()
+        // 3rd grade, Fractions (4 Nov 2026)
+        case "g3-shapeparts": return ShapeParts3Lesson()
         default: return nil
         }
     }

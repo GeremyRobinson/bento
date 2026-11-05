@@ -77,7 +77,7 @@ public enum ShapeParts3 {
         ["kind": 1, "W": Double(W), "H": Double(H), "b": Double(b), "cols": cols ? 1 : 0, "fx": fx ? 1 : 0, "fy": fy ? 1 : 0, "bad": Double(bad)]
     }
     /// The rectangle's room in squares with its record and readout beside it (so the problem shows at 75%).
-    static let room = [(40, 30)]
+    static let room = [(40, 25)]
 
     /// The parts of a W × H rectangle cut into b along a snake of tiles (rows, or columns), in turn; `bad` one square short
     /// and the next one long. regions[row][col] is the part a tile is in.

@@ -577,6 +577,8 @@ public enum Lessons {
         Round3.spec, AddSub3.spec, Estimate3.spec,
         // 3rd grade, Shapes and area (4 Nov 2026)
         Quads3.spec, Area3.spec, LShape3.spec, Perim3.spec, PerimArea3.spec,
+        // 3rd grade, Fractions (4 Nov 2026)
+        ShapeParts3.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
