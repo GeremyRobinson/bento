@@ -249,6 +249,10 @@ extension Piece {
         case "g2-twounits": return [box(0, 0, 2.5, 1.2), box(0, 4.8, 1, 1.2)]    // an inch and a centimeter
         case "g2-estimate": return [box(0, 2, 2, 0.6), box(4, 2, 2, 0.6)]        // the paper clips laid
         case "g2-numline": return [box(0, 1, 7, 1.5)]                            // the length from 0
+        // 2nd grade, Data (4 Nov)
+        case "g2-makegraph": return [box(3, 1, 5, 1.2)]                          // the bar made to its tally
+        case "g2-bargraph": return [box(6.5, 1, 1.5, 1.2)]                       // the part sticking out
+        case "g2-lineplot": return [box(4, 1.5, 1, 3)]                           // the tallest stack
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -564,6 +568,33 @@ extension Piece {
                 var out: [[CGPoint]] = [box(0, 1, 7, 1.5), line((0, 4.5), (10, 4.5))]
                 out += ticks(4.5, 1, 10, 0.4)
                 for (a, b) in [(7.0, 5.0), (5.0, 4.0)] { out.append((0...8).map { k -> CGPoint in let t = Double(k) / 8; return P(a + (b - a) * t, 4.5 - sin(.pi * t) * 0.8) }) }
+                return out
+            }
+        case "g2-makegraph", "g2-bargraph", "g2-lineplot":
+            switch id {
+            case "g2-makegraph": // tally marks beside three bars made to them: 10 by 6
+                var out: [[CGPoint]] = []
+                for (r, n) in [5, 3, 4].enumerated() {
+                    let y = 1 + 1.8 * Double(r)
+                    for i in 0..<min(n, 4) { out.append(line((0.3 + 0.5 * Double(i), y), (0.3 + 0.5 * Double(i), y + 1.2))) }
+                    if n == 5 { out.append(line((0.1, y + 1.1), (2, y + 0.1))) }
+                    out.append(box(3, y, Double(n), 1.2))
+                }
+                out.append(line((3, 0.5), (3, 6)))
+                return out
+            case "g2-bargraph": // three bars over a scale, a line dropped from one's end: 10 by 6
+                var out: [[CGPoint]] = []
+                for (r, n) in [8.0, 6.5, 4.5].enumerated() { out.append(box(0, 1 + 1.6 * Double(r), n, 1.2)) }
+                out.append(line((0, 0.5), (0, 5.8))); out.append(line((0, 5.8), (10, 5.8)))
+                for x in stride(from: 0.0, through: 10, by: 1.6) { out.append(line((x, 5.8), (x, 6.2))) }
+                for y in stride(from: 2.6, to: 5.8, by: 0.4) { out.append(line((6.5, y), (6.5, y + 0.2))) }
+                return out
+            default: // X's stacked over a line: 10 by 6
+                var out: [[CGPoint]] = [line((0, 5), (10, 5))]
+                for i in 0...5 { out.append(line((Double(i) * 2 - 0.5 + 0.5, 5), (Double(i) * 2, 5.4))) }
+                for (i, n) in [1, 2, 3, 2, 1].enumerated() {
+                    for k in 0..<n { let cx = 1 + 2 * Double(i), t = 4.5 - 1.1 * Double(k); out.append(line((cx - 0.4, t - 0.4), (cx + 0.4, t + 0.4))); out.append(line((cx - 0.4, t + 0.4), (cx + 0.4, t - 0.4))) }
+                }
                 return out
             }
         case "g2-evenodd", "g2-arrays", "g2-squares":

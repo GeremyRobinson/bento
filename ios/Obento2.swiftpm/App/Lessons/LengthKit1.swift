@@ -85,6 +85,26 @@ enum L5 {
             return [[p(-1.1, -1.1), p(1.1, -1.1), p(1.1, 1.1), p(-1.1, 1.1), p(-1.1, -1.1)]] + [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)].map { circle($0.0, $0.1, 0.13, 8) }
         case "popcorn":
             return [[p(-0.95, -0.2), p(0.95, -0.2), p(0.65, 1.4), p(-0.65, 1.4), p(-0.95, -0.2)], circle(-0.55, -0.6, 0.5, 14), circle(0.55, -0.6, 0.5, 14), circle(0, -0.95, 0.5, 14)]
+        // 2nd grade's Make a graph adds these (the preview grade2-ch5.html's paths)
+        case "pear":
+            return [[p(0, -1.15)] + cubic(p(0, -1.15), p(0.5, -1.15), p(0.5, -0.55), p(0.6, -0.3)) + cubic(p(0.6, -0.3), p(1.25, 0.2), p(1.1, 1.35), p(0, 1.35))
+                    + cubic(p(0, 1.35), p(-1.1, 1.35), p(-1.25, 0.2), p(-0.6, -0.3)) + cubic(p(-0.6, -0.3), p(-0.5, -0.55), p(-0.5, -1.15), p(0, -1.15)),
+                    [p(0, -1.15), p(0.2, -1.5)]]
+        case "bird":
+            var body = [p(-1.1, 0.2)] + quad(p(-1.1, 0.2), p(-1.1, -0.9), p(0.1, -0.9)) + quad(p(0.1, -0.9), p(0.9, -0.9), p(0.9, -0.1))
+            body += [p(1.45, 0.05), p(0.85, 0.3)] + quad(p(0.85, 0.3), p(0.6, 1), p(-0.3, 1)) + [p(-1.45, 1.15), p(-1.1, 0.2)]
+            return [body, circle(0.25, -0.35, 0.1, 8)]
+        case "wind":
+            let top = [p(-1.4, -0.55), p(0.55, -0.55)] + (1...12).map { i -> CGPoint in let a = (90 - 22.5 * Double(i)) * .pi / 180; return p(0.55 + 0.5 * cos(a), -1.05 + 0.5 * sin(a)) }
+            let mid = [p(-1.4, 0.15), p(1, 0.15)] + (1...12).map { i -> CGPoint in let a = (-90 + 22.5 * Double(i)) * .pi / 180; return p(1 + 0.5 * cos(a), 0.65 + 0.5 * sin(a)) }
+            return [top, mid, [p(-1.4, 0.85), p(0.1, 0.85)]]
+        case "cookie":
+            return [circle(0, 0, 1.2), circle(-0.45, -0.35, 0.15, 8), circle(0.4, -0.5, 0.15, 8), circle(0.1, 0.45, 0.15, 8), circle(-0.5, 0.5, 0.12, 8)]
+        case "paint":
+            var pal = [p(0, -1.3)] + cubic(p(0, -1.3), p(0.9, -1.3), p(1.3, -0.6), p(1.25, 0.1)) + cubic(p(1.25, 0.1), p(1.2, 0.9), p(0.5, 1), p(0.2, 0.8))
+            pal += cubic(p(0.2, 0.8), p(-0.1, 0.6), p(-0.5, 0.75), p(-0.5, 1.1)) + cubic(p(-0.5, 1.1), p(-0.5, 1.35), p(-1.25, 1), p(-1.3, 0))
+            pal += cubic(p(-1.3, 0), p(-1.35, -0.8), p(-0.8, -1.3), p(0, -1.3))
+            return [pal, circle(0.35, -0.55, 0.22, 10)]
         default: // pretzel
             return [[p(0, 0.95)] + cubic(p(0, 0.95), p(-1.9, -0.35), p(-0.95, -1.75), p(0, -0.55)) + cubic(p(0, -0.55), p(0.95, -1.75), p(1.9, -0.35), p(0, 0.95)),
                     [p(-0.95, 1.25), p(0.45, -0.15)], [p(0.95, 1.25), p(-0.45, -0.15)]]
@@ -97,7 +117,7 @@ enum L5 {
         let s = shapes(name)
         func pts(_ l: [CGPoint]) -> [CGPoint] { l.map { pen.P(cx + $0.x * sc, cy + $0.y * sc) } }
         let e: Sketch.Colour = faint ? .ink3 : edge
-        if let body = s.first, !faint { pen.sketch.polygon(id + "f\(lit)", pts(body), lit ? .tint(0.45) : .tint(0.2)) }
+        if let body = s.first, !faint, name != "wind" { pen.sketch.polygon(id + "f\(lit)", pts(body), lit ? .tint(0.45) : .tint(0.2)) }
         for (k, l) in s.enumerated() { pen.sketch.line("\(id)l\(k)\(faint)", pts(l), e, width: Sketch.stroke) }
     }
 
