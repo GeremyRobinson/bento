@@ -302,6 +302,7 @@ enum PaperLessons {
         // 2nd grade, Data (4 Nov 2026)
         case "g2-makegraph": return MakeGraph2Lesson()
         case "g2-bargraph": return BarGraph2Lesson()
+        case "g2-lineplot": return LinePlot2Lesson()
         default: return nil
         }
     }
