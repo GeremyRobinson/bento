@@ -648,7 +648,7 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   (`recordRow` 0) so it can move with its picture (Unit fractions' bar glides down two blocks while a part is out of it, and home).
   Departures: a square unit is 5 squares, 4 when the shape is 6 tiles tall (the preview's 5 for every shape showed 4 × 6 at 68%); Unit
   fractions' counting Check is the lesson's own block under the bar; the hopping piece is only an outline over the shading (the preview's
-  see-through tint can't be drawn: a fill over a fill fights), tinted past it; the slid part vanishes at the end instead of gliding home;
+  see-through tint can't be drawn: a fill over a fill fights), tinted past it; the slid part glides home at the end (it vanished before 4 Nov);
   the same-top pieces lift from their bars as the picture draws (`Sketch.from`). Hints: a first miss rings the ruler's track, the bar,
   the stretch of line, the coarser piece round the point, the pieces or the sign's place; a second the right cuts dashed, the last shaded
   part, the tick, the point, the parts numbered, or the right sign. Least zooms: 75%, 78%, 96%, 93%, 77%; keys up 75%+ (113% on the
@@ -658,6 +658,12 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `page-g3-fraccompare-0 -numbers a=1,b=2,c=2,d=4 -drag 48,22,13,22 -hold`. Area by counting squares (fixed 4 Nov): the live tint lies
   over the picture, so the tiles it fills draw their lines on it too, row by row as they're dragged.
 
+- 3rd grade chapter 6, Time and measuring, in progress (4 Nov): Core done with tests (`Measure3`: `Ms3` clock times and
+  pairs of boxes, `Clock3` g3-clock, `Elapsed3` g3-elapsed, `MStory3` the measuring stories, `Mass3` g3-mass, `Liters3` g3-liters;
+  `Measure3Tests`), as the preview (`design/prototype/grade3-ch6.html`) word for word. Left: every App picture (none yet; the specs
+  aren't in `Lessons.all`, so the chapter stays off the map). Plan: a jug a liter 2/4/8 squares (40 tall, grade3.md's; the
+  preview's 1/3/6 was smaller than 75% needs), the preview's grey notes folded into the first line ("1 cell is 10 g."), no 3D How
+  to (the preview has none). Unit fractions' slid part now glides home at the end (fixed 4 Nov).
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
