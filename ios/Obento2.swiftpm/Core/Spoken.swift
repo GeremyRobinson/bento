@@ -18,8 +18,19 @@ public enum Spoken {
         // a sign with no spaces round it: 3+4=7
         for (sign, words) in [("+", " plus "), ("=", " equals "), ("×", " times "), ("÷", " divided by ")] { out = out.replacingOccurrences(of: sign, with: words) }
         // a time as a person says it: 8:30 → half past 8, 8:00 → 8 o'clock
-        out = replace(out, #"\b(\d{1,2}):(\d\d)\b"#) { m in m[2] == "30" ? "half past \(m[1])" : m[2] == "00" ? "\(m[1]) o'clock" : "\(m[1]) \(m[2])" }
-        // cents and dollars: 45¢ → 45 cents, 1¢ → 1 cent
+        // (3:05 → 3 oh 5, 7:45 → 7 45: seven forty-five)
+        out = replace(out, #"\b(\d{1,2}):(\d\d)\b"#) { m in
+            m[2] == "30" ? "half past \(m[1])" : m[2] == "00" ? "\(m[1]) o'clock" : m[2].hasPrefix("0") ? "\(m[1]) oh \(m[2].dropFirst())" : "\(m[1]) \(m[2])"
+        }
+        out = out.replacingOccurrences(of: "a.m.", with: "A M").replacingOccurrences(of: "p.m.", with: "P M")
+        // dollars: $1.35 → 1 dollar and 35 cents, a $5 bill → a 5 dollar bill, $27 → 27 dollars
+        out = replace(out, #"\$(\d+)\.(\d\d)"#) { m in
+            let d = m[1] == "1" ? "1 dollar" : "\(m[1]) dollars", c = Int(m[2]) ?? 0
+            return c == 0 ? d : "\(d) and \(c) \(c == 1 ? "cent" : "cents")"
+        }
+        out = replace(out, #"\$(\d+) bill"#) { "\($0[1]) dollar bill" }
+        out = replace(out, #"\$(\d+)"#) { $0[1] == "1" ? "1 dollar" : "\($0[1]) dollars" }
+        // cents: 45¢ → 45 cents, 1¢ → 1 cent
         out = replace(out, #"\b1¢"#) { _ in "1 cent" }
         out = replace(out, #"(\d+)¢"#) { "\($0[1]) cents" }
         // a fraction: 1/2 → 1 half, 3/4 → 3 fourths
