@@ -264,6 +264,12 @@ extension Piece {
             return [pts]
         case "g2-money": return [box(4, 0, 3, 3), box(7, 0, 1, 1)]               // a quarter's block, a dime's row
         case "g2-dollars": return [box(5, 0.5, 5, 1), box(5, 1.5, 2, 0.5)]       // the dollars counted in
+        // 2nd grade, Shapes (4 Nov)
+        case "g2-shapes", "g2-solids":
+            func q(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: at.x + x * c, y: at.y + y * c) }
+            if id == "g2-shapes" { return [[q(2.5, 0), q(5, 2), q(4, 5), q(1, 5), q(0, 2)]] }   // the pentagon, its corners counted
+            return [[q(6.5, 1), q(9.5, 1), q(10.5, 2.5), q(7.5, 2.5)]]                              // a face counted
+        case "g2-shares": return [box(0, 0, 10.0 / 3, 6), box(10.0 / 3, 0, 10.0 / 3, 6)] // 2 thirds, shaded
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -603,6 +609,18 @@ extension Piece {
                 out.append(line((7.5, 0.5), (7.5, 5.5)))
                 return out
             }
+        // 2nd grade, Shapes (4 Nov)
+        case "g2-shapes": // a pentagon, its corners dotted, and a hexagon drawn beside it: 11 by 6
+            func dot(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.3 * cos(a), y + 0.3 * sin(a)) } }
+            var out: [[CGPoint]] = [line((2.5, 0), (5, 2), (4, 5), (1, 5), (0, 2), (2.5, 0))]
+            for p in [(2.5, 0.0), (5.0, 2.0), (4.0, 5.0), (1.0, 5.0), (0.0, 2.0)] { out.append(dot(p.0, p.1)) }
+            out.append(line((7, 3), (8, 1.2), (10, 1.2), (11, 3), (10, 4.8), (8, 4.8), (7, 3)))
+            return out
+        case "g2-solids": // a box standing in the tilted view, its hidden edges dashed: 11 by 6
+            return [box(1, 2.5, 6, 3.5), line((1, 2.5), (2.5, 1), (8.5, 1), (7, 2.5)), line((8.5, 1), (8.5, 4.5), (7, 6)),
+                    line((7.5, 5.4), (9.5, 0.5), (11, 4.6), (7.5, 5.4)), line((9.5, 0.5), (10, 5.8))]
+        case "g2-shares": // a rectangle cut straight down into thirds: 10 by 6
+            return [box(0, 0, 10, 6), line((10.0 / 3, 0), (10.0 / 3, 6)), line((20.0 / 3, 0), (20.0 / 3, 6))]
         case "g2-makegraph", "g2-bargraph", "g2-lineplot":
             switch id {
             case "g2-makegraph": // tally marks beside three bars made to them: 10 by 6

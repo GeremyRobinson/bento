@@ -308,6 +308,8 @@ enum PaperLessons {
         case "g2-coins": return Coins2Lesson()
         case "g2-money": return Money2Lesson()
         case "g2-dollars": return Dollars2Lesson()
+        // 2nd grade, Shapes (4 Nov 2026)
+        case "g2-shapes": return Sides2Lesson()
         default: return nil
         }
     }
