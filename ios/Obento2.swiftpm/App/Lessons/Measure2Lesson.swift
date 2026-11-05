@@ -21,7 +21,7 @@ struct Measure2Lesson: PaperLesson {
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = Measure2.Parts(s.numbers), st = at(s), RY = RY(P), W = X(P, P.top)
-        var pic = GridPen(), rec = GridPen()
+        var pic = GridPen(), rec = GridPen(), live = GridPen(stableIds: true)
         // the things, lying just above the ruler; dashed lines drop from their ends to the marks
         if P.fold {
             LN2.thing(&pic, "t1", P.name, x0: 0, x1: X(P, P.to), y: 0, label: P.name)
@@ -41,6 +41,7 @@ struct Measure2Lesson: PaperLesson {
         if st == 0, let c, c.t != c.f {
             let ro = "\(abs(c.t - c.f)) \(P.u)"
             EG2.readout(&pic, ro, x: W + 2, y: RY + 1.5)
+            if s.grabbed { live.reads(ro) }
         }
         // hints: a first miss rings the thing's stretch of the ruler, a second the mark to start on
         let ring = s.on("ring") && !s.on("spot"), spot = s.on("spot")
@@ -56,7 +57,7 @@ struct Measure2Lesson: PaperLesson {
             if st == 1 && spot { A1.note(&rec, "spot", "\(P.L)", x: end + 0.5, y: 3.5) }
         }
         let wide = W + 2 + KK.width("\(P.top) \(P.u)", KK.words)
-        return PaperDrawing(picture: pic.sketch, record: rec.sketch, boxes: rec.boxes, extent: pic.R(-1, 0, wide + 1, RY + 3))
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: pic.R(-1, 0, wide + 1, RY + 3))
     }
 
     func hands(_ s: PaperState) -> Hands? {

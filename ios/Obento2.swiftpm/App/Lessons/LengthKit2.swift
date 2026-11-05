@@ -89,7 +89,10 @@ enum LN2 {
             outline(&pen, K + "i", [(x0 + 0.5, y + 0.8), (x1 - 0.8, y + 0.8), (x1 - 0.8, y + 1.2), (x0 + 0.5, y + 1.2)], fill: false)
         case "desk": box(y, y + 0.6); ln("1", x0 + 0.6, y + 0.6, x0 + 0.6, y + 2); ln("2", x1 - 0.6, y + 0.6, x1 - 0.6, y + 2)
         case "rug": box(y + 0.8, y + 2); ln("1", x0 + 0.5, y + 1.4, x1 - 0.5, y + 1.4)
-        case "bed": outline(&pen, K, [(x0, y), (x0 + 0.6, y), (x0 + 0.6, y + 0.8), (x1, y + 0.8), (x1, y + 2), (x0, y + 2)]); ln("1", x0 + 0.6, y + 1.4, x1, y + 1.4)
+        case "bed":
+            // an L: filled as two boxes (a fill is drawn as a fan, so it can't take a corner that turns in)
+            pen.fill(K + "f1", col: x0, row: y, w: 0.6, h: 2, .tint(0.2)); pen.fill(K + "f2", col: x0 + 0.6, row: y + 0.8, w: w - 0.6, h: 1.2, .tint(0.2))
+            outline(&pen, K, [(x0, y), (x0 + 0.6, y), (x0 + 0.6, y + 0.8), (x1, y + 0.8), (x1, y + 2), (x0, y + 2)], fill: false); ln("1", x0 + 0.6, y + 1.4, x1, y + 1.4)
         case "door": box(y + 0.2, y + 1.8); ring(&pen, K + "k", x1 - 1.2, m, 0.3, 0.3)
         case "board": box(y + 0.5, y + 1.5); ln("1", x0 + 1, m, x1 - 1, m)
         case "car":

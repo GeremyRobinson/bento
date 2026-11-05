@@ -18,7 +18,7 @@ struct TwoUnits2Lesson: PaperLesson {
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = TwoUnits2.Parts(s.numbers), st = at(s), W = 5 * Double(P.imax)
         let IY = Self.IY, CY = Self.CY
-        var pic = GridPen(), rec = GridPen()
+        var pic = GridPen(), rec = GridPen(), live = GridPen(stableIds: true)
         LN2.thing(&pic, "t", P.name, x0: 0, x1: 5 * Double(P.n), y: Self.TY)
         pic.line("d0", [(0, IY + 3), (0, CY)], .ink3, dashed: true)
         pic.line("d1", [(5 * Double(P.n), IY + 3), (5 * Double(P.n), CY)], .ink3, dashed: true)
@@ -30,8 +30,8 @@ struct TwoUnits2Lesson: PaperLesson {
         // the hops: under the inch ruler's marks, over the centimeter ruler's
         if let ci { LN2.hops(&pic, "hi", ci.f, ci.t, x0: 0, per: 5, row: IY + 3, height: -1.2) }
         if let cc { LN2.hops(&pic, "hc", cc.f, cc.t, x0: 0, per: 2, row: CY, height: 0.6) }
-        if st == 0, let c = ci, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) in", x: W + 2, y: IY + 1.5) }
-        if st == 2, let c = cc, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) cm", x: W + 2, y: CY + 1.5) }
+        if st == 0, let c = ci, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) in", x: W + 2, y: IY + 1.5); if s.grabbed { live.reads("\(abs(c.t - c.f)) in") } }
+        if st == 2, let c = cc, c.t != c.f { EG2.readout(&pic, "\(abs(c.t - c.f)) cm", x: W + 2, y: CY + 1.5); if s.grabbed { live.reads("\(abs(c.t - c.f)) cm") } }
         // hints: a first miss rings the ruler (or both rulers' first space), a second the mark to start on (or one inch)
         let ring = s.on("ring") && !s.on("spot"), spot = s.on("spot")
         switch st {
@@ -67,7 +67,7 @@ struct TwoUnits2Lesson: PaperLesson {
             pic.label("pcml", "1 cm", KK.lit, .below, edge: PY + 3, along: 9)
         }
         let wide = W + 2 + KK.width("\(P.cmax) cm", KK.words)
-        return PaperDrawing(picture: pic.sketch, record: rec.sketch, boxes: rec.boxes, extent: pic.R(-1, 0, wide + 1, CY + 3))
+        return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: pic.R(-1, 0, wide + 1, CY + 3))
     }
 
     func hands(_ s: PaperState) -> Hands? {
