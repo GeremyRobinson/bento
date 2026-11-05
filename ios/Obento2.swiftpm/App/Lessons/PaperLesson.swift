@@ -338,6 +338,7 @@ enum PaperLessons {
         case "g3-fracline": return FracLine3Lesson()
         case "g3-equiv": return Equiv3Lesson()
         case "g3-fraccompare": return Compare3Lesson()
+        case "g3-clock": return Clock3Lesson()
         default: return nil
         }
     }

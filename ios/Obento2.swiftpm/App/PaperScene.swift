@@ -298,6 +298,8 @@ extension Piece {
         case "g3-fracline": return [box(5.6, 3.6, 0.8, 0.8)]                    // the point
         case "g3-equiv": return [box(3.6, 1.6, 0.8, 0.8), box(3.6, 5.6, 0.8, 0.8)] // the same point on both lines
         case "g3-fraccompare": return [box(0, 0, 6, 2), box(0, 3, 5, 2)]        // 3/4 and 5/8 shaded
+        // 3rd grade, Time and measuring (4 Nov)
+        case "g3-clock": return [box(0, 5, 7.8, 0.5)]                           // the hour line filled to the long hand
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -713,6 +715,13 @@ extension Piece {
             for i in 0...2 { out.append(line((Double(i) * 4, 1.2), (Double(i) * 4, 2))) }
             for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 5.2 : 5.5), (Double(i) * 2, 6))) }
             for y in [2.0, 6.0] { out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(4 + 0.4 * cos(a), y + 0.4 * sin(a)) }) }
+            return out
+        case "g3-clock": // a clock at 9:47, its marks and hands; the hour laid out straight under it: 10 by 6
+            func ring(_ cx: Double, _ cy: Double, _ r: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + r * cos(a), cy + r * sin(a)) } }
+            var out: [[CGPoint]] = [ring(5, 2.2, 2.2), line((5, 2.2), (5 + 1.8 * sin(4.92), 2.2 - 1.8 * cos(4.92))), line((5, 2.2), (5 + 1.1 * sin(5.1), 2.2 - 1.1 * cos(5.1)))]
+            for k in 0..<12 { let t = Double(k) / 12 * 2 * .pi; out.append(line((5 + 1.9 * sin(t), 2.2 - 1.9 * cos(t)), (5 + 2.2 * sin(t), 2.2 - 2.2 * cos(t)))) }
+            out.append(line((0, 5.5), (10, 5.5)))
+            for k in 0...12 { let x = Double(k) * 10 / 12; out.append(line((x, 5.5), (x, k % 3 == 0 ? 5 : 5.2))) }
             return out
         case "g3-fraccompare": // fourths over eighths, 3/4 shaded over 5/8, the shading's end dropped dashed: 8 by 6
             var out: [[CGPoint]] = bar(0, 0, 8, 4) + bar(0, 3, 8, 8)
