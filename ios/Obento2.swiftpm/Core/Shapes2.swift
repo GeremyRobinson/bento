@@ -306,6 +306,7 @@ public enum Solids2 {
         public let E: [(a: Int, b: Int, f: [Int])]
         public let VF: [[Int]]
     }
+    static let geos = solids.map { geo($0.kind) }
     public static func geo(_ kind: String) -> Geo {
         var V: [Vec3], F: [[Int]]
         switch kind {
@@ -343,9 +344,12 @@ public enum Solids2 {
 
     public struct Parts: Sendable {
         public let solid: Int, turn: Int
-        public init(_ x: Numbers) { solid = max(0, min(3, Shapes2.int(x, "solid"))); turn = max(0, min(2, Shapes2.int(x, "turn"))) }
+        public let geo: Geo
+        public init(_ x: Numbers) {
+            solid = max(0, min(3, Shapes2.int(x, "solid"))); turn = max(0, min(2, Shapes2.int(x, "turn")))
+            geo = Solids2.geos[solid]
+        }
         public var S: Solid { Solids2.solids[solid] }
-        public var geo: Geo { Solids2.geo(S.kind) }
         public var faces: Int { geo.F.count }
         public var edges: Int { geo.E.count }
         public var corners: Int { geo.V.count }

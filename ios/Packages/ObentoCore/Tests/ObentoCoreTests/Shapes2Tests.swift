@@ -16,6 +16,12 @@ final class Shapes2Tests: XCTestCase {
         return spec.check.map { $0.draw(spec, using: &rng) }
     }
 
+    func testOnTheMap() {
+        let ch = Curriculum.chapters(2)[6]
+        XCTAssertEqual(ch.title, "Shapes"); XCTAssertEqual(ch.colour, "geometry"); XCTAssertTrue(Curriculum.built(ch))
+        for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)) }
+    }
+
     // MARK: Sides and corners
 
     func testSidesName() {
