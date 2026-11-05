@@ -59,6 +59,9 @@ struct UnitFrac3Lesson: PaperLesson {
             if !onShade { pen.fill("pcf", col: px, row: py, w: pw, h: BH, F3P.tint) }
             pen.sketch.box("pco", pen.R(px, py, pw, BH), .chapter, width: Sketch.stroke)
             if st == 3 && s.grabbed { pen.reads("\(Fr3.plural(hops, "piece", "pieces")) of 1/\(P.b)"); live = pen } else { pic = pen }
+        } else if st == 9 && s.run.kept["p"] != nil {
+            // (done) the piece glides home into its place as the bar comes back up, as the preview's does
+            pic.sketch.box("pco", pic.R(Double(p) * pw, 0, pw, BH), .chapter, width: Sketch.stroke)
         }
         for i in 0..<hops { pic.word("hn\(i)", "\(i + 1)", at: (Double(i) + 0.5) * pw, y + BH / 2, F3P.lit) }
         if st == 3 {
