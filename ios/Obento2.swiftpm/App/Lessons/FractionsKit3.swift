@@ -33,8 +33,8 @@ enum F3P {
     }
     /// A piece lifted over the picture (over its lines too): a plate tinted (or paper), its inner tile lines every `c`
     /// squares (rows × cols of them; none when c is 0) and its outline drawn over it.
-    static func lifted(_ pen: inout GridPen, _ id: String, x: Double, y: Double, w: Double, h: Double, c: Double = 0, shaded: Bool = true, _ colour: Sketch.Colour = .ink) {
-        pen.sketch.plate(id + "p", pen.R(x, y, w, h), shaded ? shade : .paper)
+    static func lifted(_ pen: inout GridPen, _ id: String, x: Double, y: Double, w: Double, h: Double, c: Double = 0, shaded: Bool = true, fill: Sketch.Colour? = nil, _ colour: Sketch.Colour = .ink) {
+        pen.sketch.plate(id + "p", pen.R(x, y, w, h), fill ?? (shaded ? shade : .paper))
         if c > 0 {
             var j = c
             while j < w - 0.01 { pen.sketch.overLine("\(id)v\(j)", [pen.P(x + j, y), pen.P(x + j, y + h)], .ink3, width: 1); j += c }
