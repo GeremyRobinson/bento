@@ -403,8 +403,7 @@ public enum Estimate3 {
                              hint: writeHint, explain: "\(P.ra) \(P.sign) \(P.rb) = \(P.E)."),
             picture: ["at": 2])
         let judge = LessonStep(StepWords(say: "\(P.says) Tap Yes or No: could \(P.name) be right?", hint: "Is \(P.f) in the band?", action: "Check"),
-            answer: AnswerTask(prompt: [.box("c")], expected: ["c": P.yes ? 0 : 1], hint: "Is \(P.f) in the band?", explain: P.judged,
-                               check: { v in (v["c"] ?? -1) == (P.yes ? 0 : 1) ? .right : .wrong(P.judged) }, choices: ["Yes", "No"]),
+            answer: G2.hand("c", P.yes ? 0 : 1, hint: "Is \(P.f) in the band?", explain: P.judged, said: { _ in P.judged }),
             picture: ["at": 3])
         let done = LessonStep(StepWords(say: P.why, hint: "", action: "Next problem"), picture: ["at": 4])
         return [round, hop, write, judge, done]

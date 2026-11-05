@@ -574,7 +574,7 @@ public enum Lessons {
         // 3rd grade, Times-table tricks (4 Nov 2026)
         Split3.spec, Three3.spec, Double3.spec, Tens3.spec,
         // 3rd grade, Place value (4 Nov 2026)
-        Round3.spec, AddSub3.spec,
+        Round3.spec, AddSub3.spec, Estimate3.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
