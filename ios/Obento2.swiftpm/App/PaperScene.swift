@@ -302,6 +302,10 @@ extension Piece {
         case "g3-graphs": return [box(0, 1, 7, 1.2)]                            // the bar read, its line dropped to the scale
         case "g3-drawgraph": return [box(0, 4.2, 4.5, 1.2)]                     // the bar being dragged to its number
         case "g3-lineplot": return [box(6, 2.6, 1.5, 1.2)]                      // the part past the whole inches, hopped
+        // 3rd grade, Data (4 Nov)
+        case "g3-graphs": return [box(0, 1, 7, 1.2)]                            // the bar read, its line dropped to the scale
+        case "g3-drawgraph": return [box(0, 4.2, 4.5, 1.2)]                     // the bar being dragged to its number
+        case "g3-lineplot": return [box(6, 2.6, 1.5, 1.2)]                      // the part past the whole inches, hopped
         // 3rd grade, Time and measuring (4 Nov)
         case "g3-elapsed": return [box(0.8, 5, 1.6, 0.6), box(8.4, 5, 1.2, 0.6)]   // the minutes before and after the hours
         case "g3-liters": return [box(3, 2.5, 5, 3.5)]                          // the water
@@ -749,6 +753,26 @@ extension Piece {
         case "g3-fraccompare": // fourths over eighths, 3/4 shaded over 5/8, the shading's end dropped dashed: 8 by 6
             var out: [[CGPoint]] = bar(0, 0, 8, 4) + bar(0, 3, 8, 8)
             out.append(line((6, 5.5), (6, 6)))
+            return out
+        case "g3-graphs": // three bars over a scale whose lines are every 2, a line dropped from one's end: 10 by 6
+            var out: [[CGPoint]] = []
+            for (r, n) in [7.0, 4.0, 5.0].enumerated() { out.append(box(0, 1 + 1.6 * Double(r), n, 1.2)) }
+            out.append(line((0, 0.5), (0, 5.8))); out.append(line((0, 5.8), (10, 5.8)))
+            for x in stride(from: 2.0, through: 10, by: 2) { out.append(line((x, 0.5), (x, 5.8))) }
+            for y in stride(from: 2.4, to: 5.8, by: 0.4) { out.append(line((7, y), (7, y + 0.2))) }
+            return out
+        case "g3-drawgraph": // two bars made to their numbers and ticked, the third dragged out by its edge: 10 by 6
+            var out: [[CGPoint]] = [box(0, 1, 6, 1.2), box(0, 2.6, 3, 1.2), box(0, 4.2, 4.5, 1.2)]
+            out.append(line((0, 0.5), (0, 5.8))); out.append(line((0, 5.8), (10, 5.8)))
+            for x in stride(from: 2.0, through: 10, by: 2) { out.append(line((x, 5.8), (x, 6.1))) }
+            out.append(line((6.4, 1.6), (6.7, 1.9), (7.3, 1.2))); out.append(line((3.4, 3.2), (3.7, 3.5), (4.3, 2.8)))
+            out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(4.5 + 0.3 * cos(a), 4.8 + 0.3 * sin(a)) })
+            return out
+        case "g3-lineplot": // a crayon on a ruler marked in fourths, the fourths past 2 hopped: 10 by 6
+            var out: [[CGPoint]] = [box(0, 4, 10, 2)]
+            for i in 0...13 { let x = Double(i) * 0.75, h = i % 4 == 0 ? 1.0 : (i % 2 == 0 ? 0.7 : 0.4); out.append(line((x, 4), (x, 4 + h))) }
+            out.append(line((0, 2.6), (6.6, 2.6), (7.5, 3.2), (6.6, 3.8), (0, 3.8), (0, 2.6)))
+            out.append(arc(6, 6.75, 2.6, 0.7)); out.append(arc(6.75, 7.5, 2.6, 0.7))
             return out
         case "g3-graphs": // three bars over a scale whose lines are every 2, a line dropped from one's end: 10 by 6
             var out: [[CGPoint]] = []
