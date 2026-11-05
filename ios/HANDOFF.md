@@ -559,6 +559,23 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   ghost's run), so dots counted by the ghost glide in.
 - 1st grade Build with solids (4 Nov): Show me filmed, it plays all three pieces and puts everything back; the ghost solid's dashed
   rims and edges draw only once the paper is up (`Solids.Line.whenUp`).
+- **3rd grade is live** (4 Nov; Core: `Curriculum.grade3`, all 28 lessons in 7 chapters, only built chapters on the map; grade 3; not
+  read aloud (`Curriculum.voiced` stays ≤ 2)). Chapter 1, Multiply and divide, is built (Core: `MultDiv3` (`G3` cells and caps, `Facts3`
+  g3-facts, `DivFacts3` g3-divfacts, `Unknown3` g3-unknown, `TwoStep3` g3-twostep), tests `MultDiv3Tests`; App: `Facts3Lesson`,
+  `DivFacts3Lesson` (its rows and share hands shared with Two-step), `Unknown3Lesson`, `TwoStep3Lesson`, their shared `MultKit3` (`M3`:
+  arrays of dots in cells, brackets with names, the open edge to drag, rows counted, name boxes)). As the preview
+  (`design/prototype/grade3-ch1.html`), its words, slips and generators word for word; typed with the iPad's keys. New hand move: *turn a
+  quarter* (grab a corner, the array follows the finger round its middle, lands via `Sketch.lifted(from:via:)`: swing to the quarter,
+  slide home). Departures, to show at 75%: a cell is 5 squares up to 5 a side, 4 up to 7, else 3 (the preview's 5 up to 6, 4 up to 8 made
+  32-square arrays), arrays start 3 rows down; a drag past the answer isn't given room in the frame (it may run under the bar); the turn's
+  arrow sits above-right of its corner; a half turn is a miss ("That's a half turn: still 4 rows of 6. Stop at a quarter turn."), short of
+  a quarter it swings back as the preview's; Division facts writes its record where the emptied pile was; Two-step's story is on the
+  picture's top rows (2nd grade's), its cell is the biggest of 5–2 squares that fits (sharing: 3 or 2), and "then more" extras that would
+  make the packs too tall wait in a column of their own beside them; facts and division have no story kind (the preview has none), so
+  their checks' "i3 story" are plain i3. Least zooms: 75%, 75%, 75%, 76%; keys up 75%+. Shots e.g. `page-g3-facts-0 -numbers a=4,b=6
+  -drag 17.5,8,17.5,18 -hold`, `page-g3-facts-2 -numbers a=4,b=6 -showme -pause 2 -slow 1.5`, `page-g3-divfacts-0 -numbers b=4,q=6 -wrong2`,
+  `page-g3-unknown-1 -numbers a=8,b=6,form=2,flip=1 -wrong2`, `page-g3-twostep-2 -numbers kind=0,a=4,b=6,c=5,who=0 -wrong2`,
+  `page-g3-twostep-4 -numbers kind=1,a=9,b=3,c=20,who=2`, `map-started -grade 3`.
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
   finger; `BarsKit.swift` the fractions' bars, ruler and sliding pieces). `App/LessonHands.swift`: hand moves.
