@@ -295,6 +295,7 @@ extension Piece {
         // 3rd grade, Fractions (4 Nov)
         case "g3-shapeparts": return [box(0, 0, 2, 5)]                          // the part lifted
         case "g3-unitfrac": return [box(0, 3, 2, 3), box(2, 0, 2, 2)]           // the shading, and the part slid up
+        case "g3-fracline": return [box(5.6, 3.6, 0.8, 0.8)]                    // the point
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -699,6 +700,12 @@ extension Piece {
             return [box(0, 0, 2, 5), line((2, 1), (8, 1), (8, 6), (0, 6), (0, 5)), line((4, 1), (4, 6)), line((6, 1), (6, 6))]
         case "g3-unitfrac": // a bar of fourths, two shaded, one part slid up out of it: 8 by 6
             return [box(2, 0, 2, 2), box(0, 3, 8, 3), line((2, 3), (2, 6)), line((4, 3), (4, 6)), line((6, 3), (6, 6))]
+        case "g3-fracline": // a line 0 to 1 in fourths, three hops landing on the point: 9 by 6... 8 wide
+            var out: [[CGPoint]] = [line((0, 4), (8, 4))]
+            for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 3 : 3.4), (Double(i) * 2, 4))) }
+            for i in 0..<3 { out.append(arc(Double(i) * 2, Double(i + 1) * 2, 4, 1.2)) }
+            out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(6 + 0.4 * cos(a), 4 + 0.4 * sin(a)) })
+            return out
         case "g3-split", "g3-three", "g3-double", "g3-mult10":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
             var out: [[CGPoint]] = []

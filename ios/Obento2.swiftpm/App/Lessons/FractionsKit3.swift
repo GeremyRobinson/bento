@@ -57,3 +57,47 @@ enum F3P {
         T3.block(&pen, id, x: x, y: y, w: 4, label, wrong: wrong)
     }
 }
+
+/// The number line and its hops (chapter 5's): `wholes` wholes of `per` squares from column 0 on row y, a tick every per / b
+/// squares (taller at the wholes, which are named under it, or over it).
+@MainActor
+enum F3L {
+    static func line(_ pen: inout GridPen, _ id: String, y: Double, wholes: Int, per: Double, b: Int, above: Bool = false) {
+        pen.line(id + "l", [(0, y), (Double(wholes) * per, y)])
+        let ts = per / Double(b)
+        for i in 0...(wholes * b) {
+            let whole = i % b == 0, x = Double(i) * ts
+            pen.line("\(id)t\(i)", [(x, y - (whole ? 1.6 : 1)), (x, y)])
+            if whole { pen.label("\(id)w\(i)", "\(i / b)", F3P.small, above ? .above : .below, edge: above ? y - 1.6 : y, along: x) }
+        }
+    }
+    /// The peak of a hop `ts` squares long.
+    static func peak(_ ts: Double) -> Double { min(3, ts * 0.4) }
+    /// n hops of ts squares from 0 on row y, each counted over its middle (`quiet`: not counted), in the chapter's colour
+    /// or faint.
+    static func hops(_ pen: inout GridPen, _ id: String, y: Double, ts: Double, n: Int, faint: Bool = false, quiet: Bool = false) {
+        guard n > 0 else { return }
+        let H = peak(ts)
+        for i in 1...n {
+            let x1 = Double(i - 1) * ts, x2 = Double(i) * ts
+            pen.hop("\(id)a\(i)", from: x1, to: x2, row: y, height: H, faint ? .ink3 : .chapter)
+            if !quiet { pen.word("\(id)n\(i)", "\(i)", at: (x1 + x2) / 2, y - H - 0.9, F3P.smallLit) }
+        }
+    }
+    /// The handle at the end of the last hop.
+    static func handle(_ pen: inout GridPen, x: Double, y: Double, held: Bool) { pen.dot("hh", at: x, y, radius: held ? 0.7 : 0.55, .ink, over: true) }
+
+    /// Hops dragged from 0: grabbed a finger's width round the end of the last, snapping a hop at a time; let go, `said`
+    /// answers it (nil: nothing to check).
+    static func hands(_ s: PaperState, y: Double, ts: Double, max: Int, key: String, want: Int) -> Hands {
+        let n0 = Int((s.h("n") ?? 0).rounded())
+        return Hands(
+            grab: { q in abs(q.x - Double(n0) * ts) <= 2.5 && abs(q.y - y) <= 3 ? ["grab": 1, "n": Double(n0)] : nil },
+            drag: { q, h in var h = h; h["n"] = Double(Swift.max(0, Swift.min(max, Int((q.x / ts).rounded())))); return h },
+            release: { h in
+                let n = Int((h["n"] ?? 0).rounded())
+                guard n != n0, n > 0 else { return HandMove(hand: ["n": Double(n)]) }
+                return HandMove(hand: ["n": Double(n)], missHand: ["n": Double(n > want ? n0 : n)], set: [(key, Double(n))], check: true)
+            })
+    }
+}

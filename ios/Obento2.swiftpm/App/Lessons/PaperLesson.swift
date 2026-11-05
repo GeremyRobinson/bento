@@ -335,6 +335,7 @@ enum PaperLessons {
         // 3rd grade, Fractions (4 Nov 2026)
         case "g3-shapeparts": return ShapeParts3Lesson()
         case "g3-unitfrac": return UnitFrac3Lesson()
+        case "g3-fracline": return FracLine3Lesson()
         default: return nil
         }
     }
