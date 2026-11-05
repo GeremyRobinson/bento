@@ -705,13 +705,14 @@ extension Piece {
         case "g3-fracline": // a line 0 to 1 in fourths, three hops landing on the point: 9 by 6... 8 wide
             var out: [[CGPoint]] = [line((0, 4), (8, 4))]
             for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 3 : 3.4), (Double(i) * 2, 4))) }
-            for i in 0..<3 { out.append(arc(Double(i) * 2, Double(i + 1) * 2, 4, 1.2)) }
+            for i in 0..<3 { out.append(arc(Double(i) * 2, Double(i + 1) * 2, 4, 1.6)) }
             out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(6 + 0.4 * cos(a), 4 + 0.4 * sin(a)) })
             return out
         case "g3-equiv": // halves over fourths, the points one under the other, a dashed line between: 8 by 6
             var out: [[CGPoint]] = [line((0, 2), (8, 2)), line((0, 6), (8, 6)), line((4, 2.6), (4, 5.4))]
             for i in 0...2 { out.append(line((Double(i) * 4, 1.2), (Double(i) * 4, 2))) }
             for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 5.2 : 5.5), (Double(i) * 2, 6))) }
+            for y in [2.0, 6.0] { out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(4 + 0.4 * cos(a), y + 0.4 * sin(a)) }) }
             return out
         case "g3-fraccompare": // fourths over eighths, 3/4 shaded over 5/8, the shading's end dropped dashed: 8 by 6
             var out: [[CGPoint]] = bar(0, 0, 8, 4) + bar(0, 3, 8, 8)

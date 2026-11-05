@@ -12,7 +12,7 @@ import SwiftUI
 @MainActor
 struct UnitFrac3Lesson: PaperLesson {
     static let BH = F3P.BH, W = Double(Fr3.whole)
-    var liveKeys: Set<String> { ["up", "h"] }
+    var liveKeys: Set<String> { ["h"] }
     func recordRow(_ n: Numbers) -> Double? { 0 }
     func messageRows(_ n: Numbers) -> Int { 2 }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }

@@ -637,6 +637,26 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   -drag 5,1,25,1 -hold`, `page-g3-perim-0 -numbers kind=0,a=7,b=4 -path 10,2,24,2,38,2,38,10 -hold`, `page-g3-perimarea-0 -numbers
   kind=1,P=16,q=3,sp=7,sq=1 -drag 40,8,35,13 -hold`. Map pictures for all five; Place value's Estimate (two big hops to a ringed estimate) and
   Add and subtract (bigger disks) redrawn.
+- 3rd grade chapter 5, Fractions, is built (4 Nov; Core: `Fractions3` (`Fr3` the 48-square whole, piece names, a typed fraction's
+  top and bottom with the preview's slips and the same-amount nudge, `ShapeParts3` g3-shapeparts, `UnitFrac3` g3-unitfrac, `FracLine3`
+  g3-fracline, `Equiv3` g3-equiv, `Compare3` g3-fraccompare), tests `Fractions3Tests`; App: `ShapeParts3Lesson`, `UnitFrac3Lesson`,
+  `FracLine3Lesson`, `Equiv3Lesson`, `Compare3Lesson`, their shared `FractionsKit3` (`F3P`: bars 8 tall, a piece lifted over the picture as
+  a plate with its lines over it (`lifted`; two fills over each other fight, a fill never covers a line), the place it left (`hole`), words
+  beside, a fraction's record line; `F3L`: the number line, hops counted over their middles, the hops' hands)). As the preview
+  (`design/prototype/grade3-ch5.html`), its words, slips and generators word for word; fractions typed top and bottom with the iPad's
+  keys; the grey line folded in ("Cut it into 4 equal parts. 1 square unit is 4 × 4 squares here."). Every record is drawn by the lesson
+  (`recordRow` 0) so it can move with its picture (Unit fractions' bar glides down two blocks while a part is out of it, and home).
+  Departures: a square unit is 5 squares, 4 when the shape is 6 tiles tall (the preview's 5 for every shape showed 4 × 6 at 68%); Unit
+  fractions' counting Check is the lesson's own block under the bar; the hopping piece is only an outline over the shading (the preview's
+  see-through tint can't be drawn: a fill over a fill fights), tinted past it; the slid part vanishes at the end instead of gliding home;
+  the same-top pieces lift from their bars as the picture draws (`Sketch.from`). Hints: a first miss rings the ruler's track, the bar,
+  the stretch of line, the coarser piece round the point, the pieces or the sign's place; a second the right cuts dashed, the last shaded
+  part, the tick, the point, the parts numbered, or the right sign. Least zooms: 75%, 78%, 96%, 93%, 77%; keys up 75%+ (113% on the
+  tallest strips). Shots e.g. `page-g3-shapeparts-0 -numbers kind=0,W=8,H=3,b=4 -drag 40,1,10,1 -hold`, `page-g3-shapeparts-1 -numbers
+  kind=1,W=5,H=4,b=4,cols=1,bad=1 -wrong`, `page-g3-unitfrac-1 -numbers b=6,k=4 -drag 20,14,20,3 -hold` (`-showme -pause 2 -slow 1.5`
+  filmed), `page-g3-fracline-0 -numbers a=5,b=6,w=1 -drag 0,7,40,7 -hold`, `page-g3-equiv-0 -numbers kind=0,a=3,b=4,d=8 -wrong2`,
+  `page-g3-fraccompare-0 -numbers a=1,b=2,c=2,d=4 -drag 48,22,13,22 -hold`. Area by counting squares (fixed 4 Nov): the live tint lies
+  over the picture, so the tiles it fills draw their lines on it too, row by row as they're dragged.
 
 ## How the code is laid out
 - `App/Lessons/`: one file per paper lesson (`PaperLesson.swift` is the protocol and registry; `Ghost.swift` the ghost
@@ -684,7 +704,6 @@ Next, in order:
 4. A full walkthrough as a new family, then the other grades.
 - Keep the Mac cool: one simulator at a time across all workers; `tools/build.sh` builds niced, 4 jobs.
 - Branding (icon, name) is G's, later; don't write the app's name anywhere new.
-
 ## Working notes (what went wrong, so it doesn't again)
 - At most 2–3 simulators at once (five booted overloaded the Mac for hours); `shoot.sh` quits the app after each shot.
 - Ultracode/max effort burned most of a week's tokens; work at high effort, one review at most, merge as pieces land.
