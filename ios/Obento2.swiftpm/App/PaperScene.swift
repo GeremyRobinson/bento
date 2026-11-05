@@ -283,7 +283,7 @@ extension Piece {
         // 3rd grade, Place value (4 Nov)
         case "g3-round": return [box(4, 0.5, 1, 1)]                             // the block the number is in
         case "g3-addsub": return [box(3.5, 0.5, 2.5, 1)]                        // a full ten
-        case "g3-estimate": return [box(6, 2, 4, 1)]                            // the band round the estimate
+        case "g3-estimate": return [box(7, 4, 2, 1)]                            // the band round the estimate
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -640,19 +640,21 @@ extension Piece {
             out.append(arc(7, 10, 5.5, 1.5))
             return out
         case "g3-addsub": // three columns of disks in ten-frames, a full ten closing: 10 by 6
-            func ring(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.4 * cos(a), y + 0.4 * sin(a)) } }
+            func ring(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.2 * cos(a), y + 0.2 * sin(a)) } }
             var out: [[CGPoint]] = []
             for c in 0..<3 {
                 let x = Double(c) * 3.5
                 out.append(box(x, 0.5, 2.5, 1)); out.append(box(x, 2.5, 2.5, 1))
-                for d in 0..<[2, 5, 3][c] { out.append(ring(x + 0.5 + 0.5 * Double(d % 5), d < 5 ? 1 : 3)) }
+                for d in 0..<[2, 5, 3][c] { out.append(ring(x + 0.25 + 0.5 * Double(d), 1)) }
             }
             out.append(line((0, 5.5), (10, 5.5)))
             return out
         case "g3-estimate": // a line 0 to 1000, two points and their hops: 10 by 6
-            var out: [[CGPoint]] = [line((0, 3), (10, 3))]
-            for i in 0...10 { out.append(line((Double(i), i % 5 == 0 ? 2 : 2.5), (Double(i), 3))) }
-            out.append(arc(5, 6, 3, 1)); out.append(arc(6, 7, 3, 1)); out.append(arc(7, 8, 3, 1))
+            func ring(_ x: Double, _ y: Double) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + 0.35 * cos(a), y + 0.35 * sin(a)) } }
+            var out: [[CGPoint]] = [line((0, 5), (10, 5))]
+            for i in 0...10 { out.append(line((Double(i), i % 5 == 0 ? 4 : 4.5), (Double(i), 5))) }
+            out.append(arc(5, 6, 5, 0.9)); out.append(arc(6, 7, 5, 0.9)); out.append(arc(7, 8, 5, 0.9))
+            out.append(ring(2.75, 5)); out.append(ring(4.6, 5))
             return out
         case "g3-split", "g3-three", "g3-double", "g3-mult10":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }
