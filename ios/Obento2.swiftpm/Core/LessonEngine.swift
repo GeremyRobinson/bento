@@ -564,7 +564,7 @@ public enum Lessons {
         // 2nd grade, Length (4 Nov 2026)
         Measure2.spec, TwoUnits2.spec, Estimate2.spec, Numline2.spec,
         // 2nd grade, Data (4 Nov 2026)
-        MakeGraph2.spec,
+        MakeGraph2.spec, BarGraph2.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }
