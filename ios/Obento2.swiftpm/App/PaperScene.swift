@@ -299,6 +299,7 @@ extension Piece {
         case "g3-equiv": return [box(3.6, 1.6, 0.8, 0.8), box(3.6, 5.6, 0.8, 0.8)] // the same point on both lines
         case "g3-fraccompare": return [box(0, 0, 6, 2), box(0, 3, 5, 2)]        // 3/4 and 5/8 shaded
         // 3rd grade, Time and measuring (4 Nov)
+        case "g3-elapsed": return [box(0.8, 5, 1.6, 0.6), box(8.4, 5, 1.2, 0.6)]   // the minutes before and after the hours
         case "g3-clock": return [box(0, 5, 7.8, 0.5)]                           // the hour line filled to the long hand
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
@@ -715,6 +716,11 @@ extension Piece {
             for i in 0...2 { out.append(line((Double(i) * 4, 1.2), (Double(i) * 4, 2))) }
             for i in 0...4 { out.append(line((Double(i) * 2, i % 4 == 0 ? 5.2 : 5.5), (Double(i) * 2, 6))) }
             for y in [2.0, 6.0] { out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(4 + 0.4 * cos(a), y + 0.4 * sin(a)) }) }
+            return out
+        case "g3-elapsed": // a timeline of o'clocks, a hop to the o'clock, the hour, the minutes left: 10 by 6
+            func arc(_ a: Double, _ b: Double, _ h: Double) -> [CGPoint] { (0...12).map { k in let t = Double(k) / 12; return P(a + (b - a) * t, 4 - sin(.pi * t) * h) } }
+            var out: [[CGPoint]] = [line((0, 4), (10, 4)), arc(0.8, 2.4, 1), arc(2.4, 8.4, 2.6), arc(8.4, 9.6, 0.9)]
+            for x in [0.0, 2.4, 8.4] { out.append(line((x, 3.3), (x, 4))) }
             return out
         case "g3-clock": // a clock at 9:47, its marks and hands; the hour laid out straight under it: 10 by 6
             func ring(_ cx: Double, _ cy: Double, _ r: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + r * cos(a), cy + r * sin(a)) } }
