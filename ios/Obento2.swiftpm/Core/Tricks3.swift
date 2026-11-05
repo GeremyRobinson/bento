@@ -23,7 +23,7 @@ public enum Split3 {
         public var fr: Int { a * r }
         /// A thing's cell: the biggest of 5, 4, 3 squares that keeps the array 27 squares tall and 30 wide (so it shows at
         /// 75% with its record beside it).
-        public var c: Int { [5, 4, 3].first { a * $0 <= 27 && b * $0 <= 30 } ?? 3 }
+        public var c: Int { G3.cell(b, a, wide: 30, tall: 27) }
         public func rowsOf(_ n: Int) -> String { "\(G3.count(a, "row")) of \(n)" }
         public func cut(_ k: Int) -> String { "\(k) | \(b - k). Cut after 5: 5s are easy." }
         public var fiveSlips: [(Int, String)] { [(a + 5, "× means \(G3.count(a, "group")) of 5, not \(a) + 5.")] }
@@ -182,7 +182,7 @@ public enum Double3 {
         public var P: Int { 2 * half }
         /// A thing's cell: the biggest of 5, 4, 3 squares that keeps the array 28 squares a side (so it shows at 75%
         /// with its record beside it; the design's 4 made 8 × 9 32 squares tall).
-        public var c: Int { [5, 4, 3].first { rows * $0 <= 28 && n * $0 <= 28 } ?? 3 }
+        public var c: Int { G3.cell(n, rows, wide: 28, tall: 28) }
         /// The fact's row of the times table: 4, 8, 12 … 40.
         public var table: [Int] { (1...10).map { $0 * rows } }
         public func cut(_ k: Int) -> String { "\(k * n) and \((rows - k) * n) aren't equal. Find the middle." }

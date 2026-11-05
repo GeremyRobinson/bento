@@ -11,6 +11,19 @@ public enum G3 {
     /// The cell a thing sits in, in squares: 5 up to 5 a side, 4 up to 7, then 3 (the preview's 5 up to 6 and 4 up to 8
     /// made arrays 32 squares tall; at most 30 shows every problem at 75%).
     public static func cell(_ m: Int) -> Int { m <= 5 ? 5 : m <= 7 ? 4 : 3 }
+    /// The biggest of `sizes` squares to a thing that keeps `across` × `down` of them within `wide` × `tall` squares, so
+    /// the whole problem shows at 75% (the smallest size when none does): chapter 2's arrays, chapter 4's tiles and cm.
+    public static func cell(_ across: Int, _ down: Int, wide: Int, tall: Int, sizes: [Int] = [5, 4, 3]) -> Int {
+        cell(across, down, within: [(wide, tall)], sizes: sizes)
+    }
+    /// The same, fitting any one of several boxes (wide and short with the record under it, or narrower and taller with
+    /// the record beside it).
+    public static func cell(_ across: Int, _ down: Int, within boxes: [(Int, Int)], sizes: [Int] = [5, 4, 3]) -> Int {
+        for c in sizes {
+            for b in boxes where across * c <= b.0 && down * c <= b.1 { return c }
+        }
+        return sizes[sizes.count - 1]
+    }
     /// How far a drag may go past the answer n with cells of c: at least one more, never more than 36 squares or 10.
     public static func cap(_ n: Int, _ c: Int) -> Int { max(n + 1 <= 10 ? n + 1 : 10, min(10, n + 2, 36 / c)) }
     /// A typed number: right, a known slip (the preview's words), or "Not quite." and the hint.

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Perimeter on the paper, as in the preview (design/prototype/grade3-ch4.html, dPerim): a centimetre is 3 squares (2 for a
-/// big shape, said in the first line), the shape drawn true size with the web's labels and a faint tick inside every side
+/// Perimeter on the paper, as in the preview (design/prototype/grade3-ch4.html, dPerim): a centimetre is 5, 4 or 3 squares (the
+/// biggest that shows it at 75%, else 2; said in the first line), the shape drawn true size with the web's labels and a faint tick inside every side
 /// at each cm. Trace the edge: the point walks round from the first corner (a rectangle's top left, a triangle's bottom
 /// left), snapping to each cm tick and turning the corners; the walk so far is drawn in the chapter colour and the readout
 /// sums each side walked ("7 + 4"); a side without a label gets one once it's walked ("7 cm, like the top"). Letting go
@@ -14,9 +14,12 @@ struct Perim3Lesson: PaperLesson {
     typealias Pt = Geo4.Pt
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static let Y0 = 2.0
+    /// A side's label's width per letter, in squares: a given length in words size, a walked one ("7 cm, like the top")
+    /// in small words.
+    static func letter(_ P: Perim3.Parts, _ k: Int) -> Double { P.given[k] ? 0.75 : 0.52 }
     /// Beside the shape while shape and labels are 48 squares wide or less; a wider one keeps its record under it.
     func recordBeside(_ n: Numbers) -> Double? {
-        let P = Perim3.Parts(n), r = (Self.corners(P).map(\.x).max() ?? 0) + Double(P.label(1).split(separator: ",").map(\.count).max() ?? 4) * 0.52
+        let P = Perim3.Parts(n), r = (Self.corners(P).map(\.x).max() ?? 0) + Double(P.label(1).split(separator: ",").map(\.count).max() ?? 4) * Self.letter(P, 1)
         return r <= 48 ? Self.Y0 : nil
     }
     func messageRows(_ n: Numbers) -> Int { 2 }
@@ -33,7 +36,7 @@ struct Perim3Lesson: PaperLesson {
             pts = [Pt(0, hh), Pt(a * cl, hh), Pt((px * cl).rounded(), 0)]
         }
         let last = P.label(P.S.count - 1), mx = pts.map(\.x).min() ?? 0
-        let lw = Double(P.kind == 2 ? last.count : last.split(separator: ",").map(\.count).max() ?? 4) * 0.52 + 1.5
+        let lw = Double(P.kind == 2 ? last.count : last.split(separator: ",").map(\.count).max() ?? 4) * letter(P, P.S.count - 1) + 1.5
         let ox = ((lw - mx) / 5).rounded(.up) * 5
         return pts.map { Pt($0.x + ox, $0.y + Y0) }
     }
@@ -65,18 +68,19 @@ struct Perim3Lesson: PaperLesson {
             var segs: [(CGPoint, CGPoint)] = []
             for j in 1..<P.S[k] {
                 let u = Double(j) / Double(P.S[k]), mx = a.x + dx * u, my = a.y + dy * u
-                segs.append((pic.P(mx, my), pic.P(mx - nx * 0.6, my - ny * 0.6)))
+                let tk = 0.4 + 0.1 * Double(P.cell)
+                segs.append((pic.P(mx, my), pic.P(mx - nx * tk, my - ny * tk)))
             }
             if !segs.isEmpty { pic.sketch.segments("tk\(k)", segs, .ink3, width: 1) }
             // its label outside it: the given ones from the start, the others once they're walked
             guard P.given[k] || t >= cum[k + 1] else { continue }
-            let text = P.label(k), words = P.given[k] ? S3P.small : S3P.lit
+            let text = P.label(k), words = P.given[k] ? S3P.name : S3P.lit
             // beside an upright side, "7 cm, like the top" goes on two rows, so the shape keeps its width
             let rows = abs(nx) > 0.9 && text.contains(", like") ? [String(text.split(separator: ",")[0]) + ",", String(text.split(separator: ",")[1].dropFirst())] : [text]
             let w = rows.map { PaperText.width($0, PaperText.font(words.size, words.weight)) / Paper.cell }.max() ?? 1
-            let off = 0.5 + abs(nx) * w / 2 + abs(ny) * 0.4
+            let off = 0.6 + abs(nx) * (w / 2 + 0.8) + abs(ny) * 0.4
             for (j, r) in rows.enumerated() {
-                let dy = rows.count == 1 ? 0 : (Double(j) - 0.5) * 1.1
+                let dy = rows.count == 1 ? 0 : (Double(j) - 0.5) * 1.5
                 pic.word("lb\(k).\(j)", r, at: (a.x + b.x) / 2 + nx * off, (a.y + b.y) / 2 + ny * off + dy, words)
             }
         }

@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Same perimeter, different area on the paper, as in the preview (design/prototype/grade3-ch4.html, dPerimArea), one
-/// square of the grid a unit: the fence is counted along the squares' edges (a tick across it at each one), the area in
+/// Same perimeter, different area on the paper, as in the preview (design/prototype/grade3-ch4.html, dPerimArea), a unit
+/// c squares (5, 4 or 3, the biggest that shows it at 75%; under 5 the first line says so): the fence is counted along
+/// the tiles' edges (a tick across it at each unit), the area in
 /// tinted tiles, and both measures are written beside it ("fence 16 · area 15"), live while it moves. A missing side:
 /// drag the open side down a square at a time; write `8 + [4] + 8 + 4 = 24`. Same fence: drag the corner along the
 /// fence's dashed slant (it snaps to whole squares); write `5 × 3 = [15]`; then every garden the fence makes is listed and
@@ -26,46 +27,47 @@ struct PerimArea3Lesson: PaperLesson {
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = PerimArea3.Parts(s.numbers), st = at(s), X0 = Self.X0, Y0 = Self.Y0, (p, q) = Self.dims(P, s), ch = Sketch.Colour.chapter
+        let c = Double(P.c), pw = Double(p) * c, qh = Double(q) * c, tk = 0.4 + 0.1 * c
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
         let ring = s.on("ring") || s.on("spot"), spot = s.on("spot"), moving = st == 0
-        let maxW = P.kind == 0 ? P.p : P.spots.map(\.0).max() ?? P.p, maxH = P.kind == 0 ? P.maxRows : P.spots.map(\.1).max() ?? P.q
+        let maxW = Double(P.maxW) * c, maxH = Double(P.maxH) * c
         // the tiles (when tiles regroup, each glides to its new place) and the outline, with a tick at every square
         if P.kind == 2 {
-            for t in 0..<P.A { pic.fill("tile\(t)", col: X0 + Double(t % p), row: Y0 + Double(t / p), w: 1, h: 1, S3P.tint) }
-        } else if moving { live.fill("tint", col: X0, row: Y0, w: Double(p), h: Double(q), S3P.tint) }
-        else { pic.fill("tint", col: X0, row: Y0, w: Double(p), h: Double(q), S3P.tint) }
+            for t in 0..<P.A { pic.fill("tile\(t)", col: X0 + Double(t % p) * c, row: Y0 + Double(t / p) * c, w: c, h: c, S3P.tint) }
+        } else if moving { live.fill("tint", col: X0, row: Y0, w: pw, h: qh, S3P.tint) }
+        else { pic.fill("tint", col: X0, row: Y0, w: pw, h: qh, S3P.tint) }
         if moving {
-            S3P.tiles(&live, "g\(p)x\(q)", x: X0, y: Y0, rows: q, cols: p)
-            S3P.fence(&live, "fence", x: X0, y: Y0, p: p, q: q)
-            live.label("lt", "\(p)\(P.um)", P.kind == 0 ? S3P.small : S3P.lit, .above, edge: Y0 - 0.4, along: X0 + Double(p) / 2)
-            live.label("lr", "\(q)\(P.um)", S3P.lit, .right, edge: X0 + Double(p) + 1.2, along: Y0 + Double(q) / 2)
+            S3P.tiles(&live, "g\(p)x\(q)", x: X0, y: Y0, rows: q, cols: p, c: c)
+            S3P.fence(&live, "fence", x: X0, y: Y0, p: p, q: q, c: c)
+            live.label("lt", "\(p)\(P.um)", P.kind == 0 ? S3P.name : S3P.num, .above, edge: Y0 - tk, along: X0 + pw / 2)
+            live.label("lr", "\(q)\(P.um)", S3P.num, .right, edge: X0 + pw + max(1.2, tk), along: Y0 + qh / 2)
         } else {
-            S3P.tiles(&pic, "g\(p)x\(q)", x: X0, y: Y0, rows: q, cols: p)
-            S3P.fence(&pic, "fence", x: X0, y: Y0, p: p, q: q)
-            pic.label("lt", "\(p)\(P.um)", P.kind == 0 ? S3P.small : S3P.lit, .above, edge: Y0 - 0.4, along: X0 + Double(p) / 2)
-            pic.label("lr", "\(q)\(P.um)", S3P.lit, .right, edge: X0 + Double(p) + 0.4, along: Y0 + Double(q) / 2)
+            S3P.tiles(&pic, "g\(p)x\(q)", x: X0, y: Y0, rows: q, cols: p, c: c)
+            S3P.fence(&pic, "fence", x: X0, y: Y0, p: p, q: q, c: c)
+            pic.label("lt", "\(p)\(P.um)", P.kind == 0 ? S3P.name : S3P.num, .above, edge: Y0 - tk, along: X0 + pw / 2)
+            pic.label("lr", "\(q)\(P.um)", S3P.num, .right, edge: X0 + pw + tk, along: Y0 + qh / 2)
         }
         if moving {
             if P.kind == 0 {
-                M3.edge(&live, rows: true, x: X0, y: Y0, at: Y0 + Double(q), span: Double(p), held: s.grabbed)
+                M3.edge(&live, rows: true, x: X0, y: Y0, at: Y0 + qh, span: pw, held: s.grabbed)
                 if s.grabbed { live.reads("\(p) + \(q) + \(p) + \(q) = \(2 * (p + q))") }
-                if ring { KK.hintBox(&pic, "hr", x: X0 - 3, y: Y0, w: 2, h: Double(maxH)) }
-                if spot { pic.circle("sp", at: X0 + Double(p) / 2, Y0 + Double(P.q), radius: 1, ch, dashed: true) }
+                if ring { KK.hintBox(&pic, "hr", x: X0 - 3, y: Y0, w: 2, h: maxH) }
+                if spot { pic.circle("sp", at: X0 + pw / 2, Y0 + Double(P.q) * c, radius: 1.2, ch, dashed: true) }
             } else {
                 // where the corner can go: the fence's slant, dashed, or the rectangles the tiles make
                 let sp = P.spots
                 if P.kind == 1, let a = sp.first, let b = sp.last {
-                    pic.line("slant", [(X0 + Double(a.0), Y0 + Double(a.1)), (X0 + Double(b.0), Y0 + Double(b.1))], .ink3, dashed: true)
+                    pic.line("slant", [(X0 + Double(a.0) * c, Y0 + Double(a.1) * c), (X0 + Double(b.0) * c, Y0 + Double(b.1) * c)], .ink3, dashed: true)
                 }
-                for (i, c) in sp.enumerated() { pic.dot("spt\(i)", at: X0 + Double(c.0), Y0 + Double(c.1), radius: 0.3, .ink3) }
-                live.dot("hold", at: X0 + Double(p), Y0 + Double(q), radius: s.grabbed ? 0.7 : 0.55)
+                for (i, g) in sp.enumerated() { pic.dot("spt\(i)", at: X0 + Double(g.0) * c, Y0 + Double(g.1) * c, radius: 0.3, .ink3) }
+                live.dot("hold", at: X0 + pw, Y0 + qh, radius: s.grabbed ? 0.7 : 0.55)
                 if s.grabbed { live.reads(P.kind == 1 ? "\(p) by \(q) · area \(p * q)" : "\(p) by \(q) · fence \(2 * (p + q))") }
-                if ring { pic.circle("hr", at: X0 + Double(p), Y0 + Double(q), radius: 1.5, .chapter, dashed: true) }
-                if spot { pic.circle("sp", at: X0 + Double(P.p), Y0 + Double(P.q), radius: 1.2, .chapter, dashed: true) }
+                if ring { pic.circle("hr", at: X0 + pw, Y0 + qh, radius: 1.5, .chapter, dashed: true) }
+                if spot { pic.circle("sp", at: X0 + Double(P.p) * c, Y0 + Double(P.q) * c, radius: 1.2, .chapter, dashed: true) }
             }
         } else if st == 1 {
-            if ring { KK.hintBox(&pic, "hw", x: X0, y: Y0, w: Double(p), h: Double(q)) }
-            if spot { S3P.count(&pic, "sp", "\(P.want)", x: X0 + Double(p) + 3, y: Y0 + Double(q) + 1) }
+            if ring { KK.hintBox(&pic, "hw", x: X0, y: Y0, w: pw, h: qh) }
+            if spot { S3P.count(&pic, "sp", "\(P.want)", x: X0 + pw + 3, y: Y0 + qh + 1) }
         }
 
         // beside it: both measures, then the record
@@ -89,17 +91,17 @@ struct PerimArea3Lesson: PaperLesson {
             }
         }
         return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes,
-                            extent: pic.R(0, 0, X0 + Double(maxW) + 5, Y0 + Double(maxH) + 1))
+                            extent: pic.R(0, 0, X0 + maxW + 5, Y0 + maxH + 1))
     }
 
     func hands(_ s: PaperState) -> Hands? {
         guard at(s) == 0 else { return nil }
-        let P = PerimArea3.Parts(s.numbers), X0 = Self.X0, Y0 = Self.Y0, (p, q) = Self.dims(P, s)
+        let P = PerimArea3.Parts(s.numbers), X0 = Self.X0, Y0 = Self.Y0, (p, q) = Self.dims(P, s), u = Double(P.c)
         if P.kind == 0 {
             let start = Double(Self.startRows(P))
             return Hands(
-                grab: { c in M3.onEdge(c, rows: true, x: X0, y: Y0, at: Y0 + Double(q), span: Double(p)) ? ["grab": 1, "n": Double(q)] : nil },
-                drag: { c, h in var h = h; h["n"] = Double(max(1, min(P.maxRows, Int((c.y - Y0).rounded())))); return h },
+                grab: { c in M3.onEdge(c, rows: true, x: X0, y: Y0, at: Y0 + Double(q) * u, span: Double(p) * u) ? ["grab": 1, "n": Double(q)] : nil },
+                drag: { c, h in var h = h; h["n"] = Double(max(1, min(P.maxRows, Int(((c.y - Y0) / u).rounded())))); return h },
                 release: { h in
                     let k = (h["n"] ?? start).rounded()
                     guard k != Double(q) else { return HandMove(hand: ["n": k]) }
@@ -108,10 +110,10 @@ struct PerimArea3Lesson: PaperLesson {
         }
         let spots = P.spots
         return Hands(
-            grab: { c in hypot(c.x - (X0 + Double(p)), c.y - (Y0 + Double(q))) <= 2.5 ? ["grab": 1, "cp": Double(p), "cq": Double(q)] : nil },
+            grab: { c in hypot(c.x - (X0 + Double(p) * u), c.y - (Y0 + Double(q) * u)) <= 2.5 ? ["grab": 1, "cp": Double(p), "cq": Double(q)] : nil },
             drag: { c, h in
                 var best = (p, q), bd = Double.infinity
-                for sp in spots { let d = hypot(c.x - (X0 + Double(sp.0)), c.y - (Y0 + Double(sp.1))); if d < bd { bd = d; best = sp } }
+                for sp in spots { let d = hypot(c.x - (X0 + Double(sp.0) * u), c.y - (Y0 + Double(sp.1) * u)); if d < bd { bd = d; best = sp } }
                 return ["grab": 1, "cp": Double(best.0), "cq": Double(best.1)]
             },
             release: { h in
@@ -123,9 +125,9 @@ struct PerimArea3Lesson: PaperLesson {
 
     func demo(_ s: PaperState) -> [GhostMove] {
         guard at(s) == 0 else { return [] }
-        let P = PerimArea3.Parts(s.numbers), X0 = Self.X0, Y0 = Self.Y0, (p, q) = Self.dims(P, s)
-        if P.kind == 0 { return [.drag(from: CGPoint(x: X0 + Double(p) / 2, y: Y0 + Double(q)), to: CGPoint(x: X0 + Double(p) / 2, y: Y0 + Double(P.q)))] }
-        return [.drag(from: CGPoint(x: X0 + Double(p), y: Y0 + Double(q)), to: CGPoint(x: X0 + Double(P.p), y: Y0 + Double(P.q)))]
+        let P = PerimArea3.Parts(s.numbers), X0 = Self.X0, Y0 = Self.Y0, (p, q) = Self.dims(P, s), u = Double(P.c)
+        if P.kind == 0 { return [.drag(from: CGPoint(x: X0 + Double(p) * u / 2, y: Y0 + Double(q) * u), to: CGPoint(x: X0 + Double(p) * u / 2, y: Y0 + Double(P.q) * u))] }
+        return [.drag(from: CGPoint(x: X0 + Double(p) * u, y: Y0 + Double(q) * u), to: CGPoint(x: X0 + Double(P.p) * u, y: Y0 + Double(P.q) * u))]
     }
 
     func wrongMove(_ s: PaperState) -> HandMove? {

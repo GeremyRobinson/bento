@@ -109,7 +109,7 @@ final class Shapes3Tests: XCTestCase {
 
     func testArea() {
         var l = LessonRun(Area3.spec, numbers: Area3.numbers(l: 7, w: 4, unit: 1))
-        XCTAssertEqual(l.words.say, "A rug is 7 ft by 4 ft. Drag across the top row to tile it.")
+        XCTAssertEqual(l.words.say, "A rug is 7 ft by 4 ft. Drag across the top row to tile it. 1 tile is 4 × 4 squares here.")
         XCTAssertEqual(move(&l, ["n": 5]), .notYet("The row has 7. Keep going."))
         XCTAssertEqual(l.misses, 0)
         XCTAssertEqual(move(&l, ["n": 7]), .moved(1))
@@ -124,6 +124,26 @@ final class Shapes3Tests: XCTestCase {
         each(Area3.spec, 0) { n in let P = Area3.Parts(n); XCTAssertTrue((3...5).contains(P.l) && (2...4).contains(P.w) && P.unit == 0) }
         each(Area3.spec, 3) { n in let P = Area3.Parts(n); XCTAssertTrue((3...10).contains(P.l) && (2...8).contains(P.w) && P.unit == 1) }
         each(Area3.spec, 7) { n in XCTAssertEqual(Area3.Parts(n).unit, 0) }
+    }
+
+    /// Tiles and centimetres are the biggest of 5, 4, 3 squares that keep the problem at 75% (not one square a unit).
+    func testSizes() {
+        XCTAssertEqual(Area3.Parts(Area3.numbers(l: 5, w: 4)).c, 5)
+        XCTAssertNil(Area3.Parts(Area3.numbers(l: 5, w: 4)).note)
+        XCTAssertEqual(Area3.Parts(Area3.numbers(l: 9, w: 6, unit: 3)).c, 3)
+        XCTAssertEqual(Area3.Parts(Area3.numbers(l: 10, w: 8)).c, 3)
+        XCTAssertEqual(Area3.Parts(Area3.numbers(l: 9, w: 6, unit: 3)).note, "1 tile is 3 × 3 squares here.")
+        XCTAssertEqual(LShape3.Parts(LShape3.numbers(W: 6, H: 5, w: 3, h: 3)).c, 5)
+        XCTAssertEqual(LShape3.Parts(LShape3.numbers(W: 8, H: 6, w: 3, h: 2)).c, 4)
+        XCTAssertEqual(LShape3.Parts(LShape3.numbers(W: 10, H: 8, w: 4, h: 3)).c, 3)
+        XCTAssertEqual(Perim3.Parts(Perim3.numbers(kind: 0, a: 5, b: 3)).cell, 5)
+        XCTAssertEqual(Perim3.Parts(Perim3.numbers(kind: 0, a: 15, b: 7)).cell, 2)
+        XCTAssertEqual(Perim3.Parts(Perim3.numbers(kind: 1, a: 9)).cell, 2)
+        XCTAssertEqual(Perim3.Parts(Perim3.numbers(kind: 2, a: 5, b: 10, c: 11)).tall, 10)
+        XCTAssertEqual(PerimArea3.Parts(PerimArea3.fence(P: 16, q: 3, start: (7, 1))).c, 5)
+        XCTAssertEqual(PerimArea3.Parts(PerimArea3.tiles(A: 24, p: 6, q: 4, start: (12, 2))).c, 3)
+        XCTAssertEqual(G3.cell(9, 6, within: [(30, 27), (62, 12)]), 3)
+        XCTAssertEqual(G3.cell(8, 6, wide: 28, tall: 28), 3)
     }
 
     func testLShape() {
@@ -165,7 +185,7 @@ final class Shapes3Tests: XCTestCase {
     func testPerimeter() {
         var l = LessonRun(Perim3.spec, numbers: Perim3.numbers(kind: 0, a: 7, b: 4))
         XCTAssertEqual(l.steps.count, 5)
-        XCTAssertEqual(l.words.say, "Trace around the edge. 1 cm is 3 squares.")
+        XCTAssertEqual(l.words.say, "Trace around the edge. 1 cm is 4 squares.")
         XCTAssertEqual(move(&l, ["t": 11]), .moved(1))
         XCTAssertEqual(l.words.say, "Write 7 + 4.")
         XCTAssertEqual(move(&l, ["two": 28]), .notYet("Perimeter adds up lengths. 7 × 4 would be the squares inside."))
@@ -199,7 +219,7 @@ final class Shapes3Tests: XCTestCase {
 
     func testSamePerimeter() {
         var m = LessonRun(PerimArea3.spec, numbers: PerimArea3.missing(P: 24, l: 8))
-        XCTAssertEqual(m.words.say, "The fence is 24 m. One side is 8 m. Drag the other side.")
+        XCTAssertEqual(m.words.say, "The fence is 24 m. One side is 8 m. Drag the other side. 1 square m is 4 × 4 squares here.")
         XCTAssertEqual(move(&m, ["d": 3]), .notYet("That fence is 22. It needs 24."))
         XCTAssertEqual(move(&m, ["d": 4]), .moved(1))
         XCTAssertEqual(move(&m, ["w": 16]), .notYet("24 − 8 is the other three sides."))

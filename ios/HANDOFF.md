@@ -619,21 +619,23 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   `PerimArea3Lesson`, their shared `ShapesKit3` (`S3P`: tiles a square each, the fence's ticks, word lines)). As the preview
   (`design/prototype/grade3-ch4.html`), its words, slips and generators word for word; typed with the iPad's keys; the grey lines folded
   into the first instruction ("A rug is 7 ft by 4 ft. Drag across the top row to tile it.", "Trace around the edge. 1 cm is 3 squares.").
-  **Call of 4 Nov: where a lesson measures area, one square of the grid is one square unit** (not the preview's block, nor its 4- or
-  3-square tiles with "1 tile is 4 × 4 squares here"), so Area, L-shapes and Same perimeter draw their rectangles a square a unit (a 10 × 8
-  rug is 10 × 8 squares) and are seen at 93–125%. Quadrilaterals: tap sides (a tap inside or a side again is a notice, not a miss), square
+  **Fixed 4 Nov (lead's call): a square unit is a tile of 5, 4 or 3 squares**, the biggest that keeps the whole problem at 75%
+  (`G3.cell(_:_:within:)`, chapter 1–2's rule, now shared; each lesson's `room` the picture may fill with its record beside or under it),
+  as the preview; the one-square-a-unit call left a 9 × 6 rug 9 × 6 tiny squares. Under 5 the first line says "1 tile is 3 × 3 squares
+  here." (Same perimeter's fence: "1 square m is …"). Side names and row counts are words size; each count sits at its tile row's middle;
+  rulers, edges, hint rings, ticks and records follow the tile. Perimeter's cm is 5, 4 or 3 squares (2 only when 3 won't fit at 75%),
+  given lengths words size, the walked "7 cm, like the top" small. Areas and L-shapes may write their record beside the picture. Quadrilaterals: tap sides (a tap inside or a side again is a notice, not a miss), square
   corners (a wrong one lays the paper corner red; Done), measure (a strip of squares along the side), Yes/No, two sides that never meet
   (they run on dashed; parallel ones arrowed, others measured closing in with drops; No more), the name (six blocks), also; make one (drag a
   corner; a shape that breaks snaps back as a miss; Done keeps the made shape, "made"); the picks and the record are in the picture's squares
   beside it (`recordRow` 0). L-shapes: two rulers (down over the top, across off the right), the cut kept ("ax") so the parts' words and
-  answers follow it (`S3.typedKept`). Perimeter: the walk snaps a cm at a time along this side and round the next corner; a cm is 3
-  squares up to 8 × 6 cm, else 2; the upright sides' "7 cm, like the top" go on two rows. Same perimeter: the missing side starts at 2 rows
+  answers follow it (`S3.typedKept`). Perimeter: the walk snaps a cm at a time along this side and round the next corner; the upright sides' "7 cm, like the top" go on two rows. Same perimeter: the missing side starts at 2 rows
   when the answer is 1 (the preview started on the answer). Departures: the area's last row count joins once it's written (as
-  Multiplication facts), Perimeter's boxes are 3 digits (a slip of 150 fits). Least zooms: 76%, 93%, 76%, 76%, 96%. Shots e.g.
+  Multiplication facts), Perimeter's boxes are 3 digits (a slip of 150 fits). Least zooms (after the fix): Quadrilaterals 76%, Area 77%, L-shapes 75%, Perimeter 75%, Same perimeter 77%; keys up 75%+. Shots e.g.
   `page-g3-quads-4 -numbers shape=4,x0=5,y0=0,x1=25,y1=0,x2=30,y2=12,x3=0,y3=12,warm=1 -wrong`, `page-g3-quads-0 -numbers shape=0,make=1
-  -drag 25,23,31,23 -hold`, `page-g3-area-1 -numbers l=9,w=6,unit=3 -drag 9.5,4,9.5,7 -hold`, `page-g3-lshape-0 -numbers W=8,H=6,w=3,h=2
-  -drag 5,1,10,1 -hold`, `page-g3-perim-0 -numbers kind=0,a=7,b=4 -path 10,2,20,2,31,2,31,10 -hold`, `page-g3-perimarea-0 -numbers
-  kind=1,P=16,q=3,sp=7,sq=1 -drag 12,4,10,6 -hold`. Map pictures for all five; Place value's Estimate (two big hops to a ringed estimate) and
+  -drag 25,23,31,23 -hold`, `page-g3-area-1 -numbers l=9,w=6,unit=3 -drag 18.5,6,18.5,15 -hold`, `page-g3-lshape-0 -numbers W=8,H=6,w=3,h=2
+  -drag 5,1,25,1 -hold`, `page-g3-perim-0 -numbers kind=0,a=7,b=4 -path 10,2,24,2,38,2,38,10 -hold`, `page-g3-perimarea-0 -numbers
+  kind=1,P=16,q=3,sp=7,sq=1 -drag 40,8,35,13 -hold`. Map pictures for all five; Place value's Estimate (two big hops to a ringed estimate) and
   Add and subtract (bigger disks) redrawn.
 
 ## How the code is laid out

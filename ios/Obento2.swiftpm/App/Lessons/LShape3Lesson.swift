@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Area of L-shapes on the paper, as in the preview (design/prototype/grade3-ch4.html, dLShape), one square of the grid a
-/// square unit: the L (a W × H rectangle with a w × h corner missing), its six sides named (from problem 7 one has an empty
+/// Area of L-shapes on the paper, as in the preview (design/prototype/grade3-ch4.html, dLShape), a square unit a tile of
+/// c squares (5, 4 or 3, the biggest that shows it at 75%; under 5 the first line says so): the L (a W × H rectangle with a w × h corner missing), its six sides named (from problem 7 one has an empty
 /// box). Two rulers: one on a stem over the top (it cuts down), one off the right side (it cuts across); dragged, each
 /// snaps between squares, a dashed cut runs across and the readout names the two pieces ("4 × 3 | 5 × 6", or "a rectangle
 /// | an L"). Let go from the inside corner: the cut turns solid and the second part glides a square away; each part is
@@ -15,9 +15,11 @@ struct LShape3Lesson: PaperLesson {
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static let X0 = 5.0, Y0 = 4.0
     func messageRows(_ n: Numbers) -> Int { 2 }
+    func recordBeside(_ n: Numbers) -> Double? { Self.Y0 }
     private static func down(_ s: PaperState) -> Bool { (s.run.kept["ax"] ?? 1) != 2 }
     private static func rulers(_ P: LShape3.Parts) -> (d: T3.Ruler, a: T3.Ruler) {
-        (T3.Ruler(down: true, x: X0, y: Y0, c: 1, n: P.W, span: P.H), T3.Ruler(down: false, x: X0, y: Y0, c: 1, n: P.H, span: P.W))
+        let c = Double(P.c)
+        return (T3.Ruler(down: true, x: X0, y: Y0, c: c, n: P.W, span: P.H), T3.Ruler(down: false, x: X0, y: Y0, c: c, n: P.H, span: P.W))
     }
     func say(_ s: PaperState) -> String? {
         let st = at(s)
@@ -26,7 +28,7 @@ struct LShape3Lesson: PaperLesson {
 
     /// A ruler drawn under its own ids: its stem, its handle and, away from its rest, the dashed cut.
     private static func ruler(_ pen: inout GridPen, _ id: String, _ R: T3.Ruler, _ k: Int, held: Bool, rest: Int) {
-        let h = R.at(k), L = Double(R.span)
+        let h = R.at(k), L = Double(R.span) * R.c
         if R.down { pen.line(id + "s", [(h.x, R.y), (h.x, h.y)], .chapter) } else { pen.line(id + "s", [(R.x + L, h.y), (h.x, h.y)], .chapter) }
         pen.dot(id + "h", at: h.x, h.y, radius: held ? 0.7 : 0.55)
         guard k != rest, k > 0, k < R.n else { return }
@@ -35,20 +37,20 @@ struct LShape3Lesson: PaperLesson {
     }
 
     func draw(_ s: PaperState) -> PaperDrawing {
-        let P = LShape3.Parts(s.numbers), st = at(s), X0 = Self.X0, Y0 = Self.Y0, W = Double(P.W), H = Double(P.H)
+        let P = LShape3.Parts(s.numbers), st = at(s), X0 = Self.X0, Y0 = Self.Y0, c = Double(P.c), W = Double(P.W) * c, H = Double(P.H) * c
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
         let ring = s.on("ring") || s.on("spot"), spot = s.on("spot"), ch = Sketch.Colour.chapter
         let ext = pic.R(0, Y0 - 4, X0 + W + 5, H + 6)
         if st == 0 {
-            let pts = P.outline.map { Pt(X0 + Double($0.0), Y0 + Double($0.1)) }
+            let pts = P.outline.map { Pt(X0 + Double($0.0) * c, Y0 + Double($0.1) * c) }
             G8.path(&pic, "L", pts, .ink, closed: true)
             // each side named, outside the L (the one without a name: an empty box)
             func inL(_ x: Double, _ y: Double) -> Bool {
-                x > 0 && x < W && y > 0 && y < H && !(x > Double(P.nx.0) && x < Double(P.nx.1) && y > Double(P.ny.0) && y < Double(P.ny.1))
+                x > 0 && x < Double(P.W) && y > 0 && y < Double(P.H) && !(x > Double(P.nx.0) && x < Double(P.nx.1) && y > Double(P.ny.0) && y < Double(P.ny.1))
             }
             for i in 0..<6 {
                 let a = pts[i], b = pts[(i + 1) % 6], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, horiz = a.y == b.y
-                let bx = mx - X0, by = my - Y0
+                let bx = (mx - X0) / c, by = (my - Y0) / c
                 let side: GridPen.Side = horiz ? (inL(bx, by + 0.1) ? .above : .below) : (inL(bx + 0.1, by) ? .left : .right)
                 if (P.hide == 1 && i == 0) || (P.hide == 2 && i == 3) {
                     let cx = horiz ? mx : side == .left ? mx - 2.5 : mx + 2.5, cy = horiz ? (side == .above ? my - 1.5 : my + 1.5) : my
@@ -58,7 +60,7 @@ struct LShape3Lesson: PaperLesson {
                 var along = horiz ? mx : my
                 if i == 1 { along += (pts[1].y - pts[2].y) * 0.35 }
                 if i == 2 { along += (pts[3].x - pts[2].x) * 0.35 }
-                pic.label("s\(i)", "\(P.lens[i])", S3P.small, side, edge: horiz ? my : mx, along: along)
+                pic.label("s\(i)", "\(P.lens[i])", S3P.name, side, edge: horiz ? my : mx, along: along)
             }
             let (Rd, Ra) = Self.rulers(P), kd = Int((s.h("kd") ?? Double(P.restDown)).rounded()), ka = Int((s.h("ka") ?? Double(P.restAcross)).rounded())
             let ax = Int((s.h("ax") ?? 0).rounded())
@@ -72,8 +74,8 @@ struct LShape3Lesson: PaperLesson {
                 }
             }
             // a miss rings the inside corner; a second dashes the cut from it
-            if ring { KK.hintBox(&pic, "hr", x: X0 + Double(P.X) - 1, y: Y0 + Double(P.Y) - 1, w: 2, h: 2) }
-            if spot { pic.line("sp", [(X0 + Double(P.X), Y0 - 0.5), (X0 + Double(P.X), Y0 + H + 0.5)], ch, dashed: true) }
+            if ring { KK.hintBox(&pic, "hr", x: X0 + Double(P.X) * c - 1, y: Y0 + Double(P.Y) * c - 1, w: 2, h: 2) }
+            if spot { pic.line("sp", [(X0 + Double(P.X) * c, Y0 - 0.5), (X0 + Double(P.X) * c, Y0 + H + 0.5)], ch, dashed: true) }
             return PaperDrawing(picture: pic.sketch, live: live.sketch, record: rec.sketch, boxes: rec.boxes, extent: ext)
         }
         // the two parts, a square apart while they're written, then back together
@@ -82,18 +84,18 @@ struct LShape3Lesson: PaperLesson {
         var boxes: [CGRect] = []
         for (n, p) in parts.enumerated() {
             let ox = n == 1 && apart && dn ? 1.0 : 0, oy = n == 1 && apart && !dn ? 1.0 : 0
-            let px = X0 + Double(p.x0) + ox, py = Y0 + Double(p.y0) + oy, pw = Double(p.cols), ph = Double(p.rows)
+            let px = X0 + Double(p.x0) * c + ox, py = Y0 + Double(p.y0) * c + oy, pw = Double(p.cols) * c, ph = Double(p.rows) * c
             boxes.append(CGRect(x: px, y: py, width: pw, height: ph))
             if st > n + 1 { pic.fill("pt\(n)", col: px, row: py, w: pw, h: ph, S3P.tint) }
-            S3P.tiles(&pic, "p\(n)", x: px, y: py, rows: p.rows, cols: p.cols)
+            S3P.tiles(&pic, "p\(n)", x: px, y: py, rows: p.rows, cols: p.cols, c: c)
             let wFound = P.hide == 1 && p.x0 == compX.0 && p.x1 == compX.1, hFound = P.hide == 2 && p.y0 == compY.0 && p.y1 == compY.1
             let below = !dn && n == 1, right = dn && n == 1
             let wl = wFound ? P.found ?? "" : "\(p.cols)", hl = hFound ? P.found ?? "" : "\(p.rows)"
-            pic.label("pw\(n)", wl, wFound ? S3P.lit : S3P.small, below ? .below : .above, edge: below ? py + ph : py, along: px + pw / 2)
-            pic.label("ph\(n)", hl, hFound ? S3P.lit : S3P.small, right ? .right : .left, edge: right ? px + pw : px, along: py + ph / 2)
+            pic.label("pw\(n)", wl, wFound ? S3P.num : S3P.name, below ? .below : .above, edge: below ? py + ph : py, along: px + pw / 2)
+            pic.label("ph\(n)", hl, hFound ? S3P.num : S3P.name, right ? .right : .left, edge: right ? px + pw : px, along: py + ph / 2)
         }
         if (st == 1 || st == 2) && ring { let b = boxes[st - 1]; KK.hintBox(&pic, "hp", x: b.minX, y: b.minY, w: b.width, h: b.height) }
-        if (st == 1 || st == 2) && spot { let b = boxes[st - 1]; S3P.count(&pic, "sp", "\(parts[st - 1].area)", x: b.maxX, y: b.maxY - 0.5) }
+        if (st == 1 || st == 2) && spot { let b = boxes[st - 1]; S3P.count(&pic, "sp", "\(parts[st - 1].area)", x: b.maxX, y: b.maxY - c / 2) }
         if st == 3 && ring { KK.hintBox(&pic, "hs", x: X0, y: Y0, w: W, h: H) }
 
         // the record

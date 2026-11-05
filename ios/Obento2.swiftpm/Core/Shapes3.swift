@@ -3,8 +3,9 @@ import Foundation
 // 3rd grade's chapter 4, Shapes and area (design/grade3.md chapter 4, the preview design/prototype/grade3-ch4.html): a
 // quadrilateral's sides, corners, lengths and parallel sides found by tapping, then its most special name; area as tiles
 // laid in a row and the row dragged down; an L cut into two rectangles; the edge traced round a shape a cm at a time; and
-// a fence and a garden dragged into shape. Where a lesson measures area, one square of the grid is one square unit (the
-// call of 4 Nov), so the tiles are the paper's own squares. Every number the child writes is typed with the iPad's keys
+// a fence and a garden dragged into shape. Where a lesson measures area, a square unit is a tile of 5, 4 or 3 squares,
+// the biggest that keeps the whole problem at 75% (as chapter 1's arrays; the call of 4 Nov that a tile is one square
+// left the pictures far too small), and the page says so under 5. Every number the child writes is typed with the iPad's keys
 // and Check; the preview's grey lines (a story, what a square stands for) are folded into the instruction.
 
 /// What the chapter shares.
@@ -327,8 +328,8 @@ public enum Quads3 {
 
 // MARK: - Area by counting squares
 
-/// Area by counting squares (the web's g3-area; 3.MD.C.5, 3.MD.C.6, 3.MD.C.7a, b). One square of the grid is one square
-/// unit, a tile. The rectangle's outline, `l` across and `w` down, its sides named. Drag across the top row to tile it
+/// Area by counting squares (the web's g3-area; 3.MD.C.5, 3.MD.C.6, 3.MD.C.7a, b). A square unit is a tile of `c` × `c`
+/// squares (5, 4 or 3; "1 tile is 4 × 4 squares here." under 5). The rectangle's outline, `l` across and `w` down, its sides named. Drag across the top row to tile it
 /// ("5 tiles"); drag the row down (rows of l fill down and count by l at the right end, "3 rows of 7"); write
 /// `4 × 7 = [28] square units`. From problem 4 a problem names a unit in turn (a rug "7 ft by 4 ft": square feet).
 ///
@@ -337,11 +338,16 @@ public enum Quads3 {
 public enum Area3 {
     public static let units: [(u: String, sq: String, thing: String)] = [("", "square units", ""), ("ft", "square feet", "A rug"),
         ("cm", "square centimeters", "A sticker"), ("m", "square meters", "A garden"), ("in", "square inches", "A photo")]
+    /// The rectangle's room in squares, with its record beside it or under it (so the problem shows at 75%).
+    static let room = [(30, 27), (62, 12)]
     public static func numbers(l: Int, w: Int, unit: Int = 0) -> Numbers { ["l": Double(l), "w": Double(w), "unit": Double(unit)] }
     public struct Parts: Sendable {
         public let l: Int, w: Int, unit: Int
         public init(_ x: Numbers) { l = max(2, min(10, S3.int(x, "l", 7))); w = max(1, min(8, S3.int(x, "w", 4))); unit = max(0, min(4, S3.int(x, "unit"))) }
         public var A: Int { l * w }
+        /// A tile's side in squares: the biggest of 5, 4, 3 that keeps the rectangle in its room (so it shows at 75%).
+        public var c: Int { G3.cell(l, w, within: Area3.room) }
+        public var note: String? { c < 5 ? "1 tile is \(c) × \(c) squares here." : nil }
         public var uw: String { Area3.units[unit].sq }
         /// A side's name: "7 ft", or "7".
         public func nm(_ n: Int) -> String { unit == 0 ? "\(n)" : "\(n) \(Area3.units[unit].u)" }
@@ -369,7 +375,7 @@ public enum Area3 {
         check: [CheckItem(3), CheckItem(3, when: { Parts($0).l >= 7 }), CheckItem(3, when: { Parts($0).w >= 6 }), CheckItem(3)]) { x in
         let P = Parts(x)
         let rowHint = "Drag from the left end all the way to the right end."
-        let row = LessonStep(StepWords(say: (P.story.map { $0 + " " } ?? "") + "Drag across the top row to tile it.", hint: rowHint, action: "Check"),
+        let row = LessonStep(StepWords(say: (P.story.map { $0 + " " } ?? "") + "Drag across the top row to tile it." + (P.note.map { " " + $0 } ?? ""), hint: rowHint, action: "Check"),
             answer: S3.hand("n", P.l, hint: rowHint, explain: "\(P.l) tiles in a row.", said: { _ in .soft("The row has \(P.l). Keep going.") }),
             picture: ["at": 0], onMiss: ["ring": 1], hint2: ["spot": 1])
         let rowsHint = "Stop when there are \(P.w) rows."
@@ -387,7 +393,7 @@ public enum Area3 {
 
 // MARK: - Area of L-shapes
 
-/// Area of L-shapes (g3-lshape, new; 3.MD.C.7d). One square is one square unit, as Area. A W × H rectangle with a w × h
+/// Area of L-shapes (g3-lshape, new; 3.MD.C.7d). A square unit is a tile of `c` squares, as Area. A W × H rectangle with a w × h
 /// corner missing (K: 0 top right, 1 top left, 2 bottom right, 3 bottom left), every side named. Cut it into two rectangles
 /// with the ruler, from the inside corner, down or across (readout "4 × 3 | 5 × 6", or "a rectangle | an L"); the parts
 /// glide a square apart; write each part's area, `4 × 3 = [12]` (it tiles itself), then they glide back: `12 + 30 = [42]`.
@@ -396,6 +402,8 @@ public enum Area3 {
 /// "W", "H", "w", "h", "K", "hide" (0, 1 the top side, 2 the side down from it). "at": 0 cut, 1 a, 2 b, 3 sum, 4 done. Boxes:
 /// "k" the cut, 100 + column (down) or 200 + row (across); kept "ax" (1 down, 2 across); "a", "b", "s".
 public enum LShape3 {
+    /// The L's room in squares, its record beside it.
+    static let room = [(32, 27)]
     public static func numbers(W: Int, H: Int, w: Int, h: Int, K: Int = 0, hide: Int = 0) -> Numbers {
         ["W": Double(W), "H": Double(H), "w": Double(w), "h": Double(h), "K": Double(K), "hide": Double(hide)]
     }
@@ -416,6 +424,9 @@ public enum LShape3 {
         public var fx: Bool { K == 1 || K == 3 }
         public var fy: Bool { K >= 2 }
         public var tot: Int { W * H - w * h }
+        /// A tile's side in squares: the biggest of 5, 4, 3 that keeps the L in its room (so it shows at 75%).
+        public var c: Int { G3.cell(W, H, within: LShape3.room) }
+        public var note: String? { c < 5 ? "1 tile is \(c) × \(c) squares here." : nil }
         /// The inside corner's column and row: where a cut down or across starts.
         public var X: Int { fx ? w : W - w }
         public var Y: Int { fy ? H - h : h }
@@ -493,7 +504,7 @@ public enum LShape3 {
         check: [CheckItem(3), CheckItem(3, when: { Parts($0).K != 0 }), CheckItem(3, when: { Parts($0).W >= 8 }), CheckItem(6, when: { Parts($0).hide != 0 })]) { x in
         let P = Parts(x)
         let cutHint = "Start the cut at the inside corner."
-        let cut = LessonStep(StepWords(say: P.say(0, down: true), hint: cutHint, action: "Check"),
+        let cut = LessonStep(StepWords(say: P.say(0, down: true) + (P.note.map { " " + $0 } ?? ""), hint: cutHint, action: "Check"),
             answer: AnswerTask(prompt: [.box("k")], expected: ["k": Double(100 + P.X)], hint: cutHint, explain: "Two rectangles.",
                                check: { v in P.cut(S3.int(v, "k")) }, byHand: true),
             picture: ["at": 0], onMiss: ["ring": 1], hint2: ["spot": 1])
@@ -517,7 +528,7 @@ public enum LShape3 {
 
 // MARK: - Perimeter
 
-/// Perimeter (the web's g3-perim; 3.MD.D.8). A centimetre is 3 squares (2 for a big shape), the shape drawn true size with
+/// Perimeter (the web's g3-perim; 3.MD.D.8). A centimetre is 5, 4 or 3 squares (2 for a shape too big for 3), the shape drawn true size with
 /// the web's labels: two sides of a rectangle, one side of a square, all three of a triangle. Trace around the edge: from the
 /// top left corner the point snaps to each cm tick and turns the corners; each side lights as it's walked and joins the
 /// readout's sum ("7 + 4"), and a side without a label gets one ("7 cm, like the top"). A rectangle or triangle writes
@@ -526,6 +537,8 @@ public enum LShape3 {
 /// "kind" 0 rectangle, 1 square, 2 triangle; "a", "b", "c". "at": 0 walk two sides, 1 write them, 2 walk the rest, 3 write
 /// all, 4 done. Boxes: "t" the cm walked when let go at the step's end; "two", "P".
 public enum Perim3 {
+    /// The shape's room in squares, its record beside it or under it.
+    static let room = [(28, 26), (55, 14)]
     public static func numbers(kind: Int, a: Int, b: Int = 0, c: Int = 0) -> Numbers { ["kind": Double(kind), "a": Double(a), "b": Double(b), "c": Double(c)] }
     public struct Parts: Sendable {
         public let kind: Int, a: Int, b: Int, c: Int
@@ -540,11 +553,14 @@ public enum Perim3 {
         public var cum: [Int] { var o = [0]; for s in S { o.append(o[o.count - 1] + s) }; return o }
         public var given: [Bool] { kind == 0 ? [true, true, false, false] : kind == 1 ? [true, false, false, false] : [true, true, true] }
         public func label(_ k: Int) -> String { given[k] ? "\(S[k]) cm" : "\(S[k]) cm, like the \(kind == 0 ? ["top", "right"][max(0, k - 2)] : "top")" }
-        /// Squares to a centimetre: 3, or 2 for a big shape.
-        public var cell: Int {
-            if kind == 2 { return a <= 8 && max(b, c) <= 7 ? 3 : 2 }
-            return a <= 8 && b <= 6 ? 3 : 2
+        /// How tall the shape is, in cm (a triangle's height, rounded up).
+        public var tall: Int {
+            guard kind == 2 else { return b }
+            let A = Double(a), px = (A * A + Double(c * c - b * b)) / (2 * A)
+            return Int((Double(c * c) - px * px).squareRoot().rounded(.up))
         }
+        /// Squares to a centimetre: the biggest of 5, 4, 3 (else 2) that keeps the shape in its room (so it shows at 75%).
+        public var cell: Int { G3.cell(a, tall, within: Perim3.room, sizes: [5, 4, 3, 2]) }
         /// The steps' "at" codes.
         public var stages: [Int] { kind == 1 ? [2, 3, 4] : [0, 1, 2, 3, 4] }
         public var note: String { "1 cm is \(cell) squares\(cell < 3 ? " here" : "")." }
@@ -628,7 +644,7 @@ public enum Perim3 {
 
 // MARK: - Same perimeter, different area
 
-/// Same perimeter, different area (g3-perimarea, new; 3.MD.D.8). One square is one unit: the fence is counted along the
+/// Same perimeter, different area (g3-perimarea, new; 3.MD.D.8). A unit is `c` squares (5, 4 or 3, as Area): the fence is counted along the
 /// squares' edges (a tick on each line) and the area in tiles; the readout beside it shows both ("fence 16 · area 15").
 /// A missing side: "The fence is 24 m. One side is 8 m." Drag the other side; write `8 + [4] + 8 + 4 = 24`. Same fence:
 /// drag the corner along the fence's slant (snapping to whole squares); write `5 × 3 = [15]`; every garden this fence
@@ -638,6 +654,8 @@ public enum Perim3 {
 /// "kind" 0 missing side ("P", "l"), 1 same fence ("P", "p", "q", start "sp" "sq"), 2 same tiles ("A", "p", "q", start).
 /// "at": 0 drag, 1 write, 2 done. Boxes: "d" the side let go at (kind 0), or 100 × p + q the corner let go at; "w".
 public enum PerimArea3 {
+    /// The biggest rectangle's room in squares, its record beside it.
+    static let room = [(35, 27)]
     public static func missing(P: Int, l: Int) -> Numbers { ["kind": 0, "P": Double(P), "l": Double(l)] }
     public static func fence(P: Int, q: Int, start: (Int, Int)) -> Numbers {
         ["kind": 1, "P": Double(P), "p": Double(P / 2 - q), "q": Double(q), "sp": Double(start.0), "sq": Double(start.1)]
@@ -672,13 +690,29 @@ public enum PerimArea3 {
         }
         /// The tallest the side may be dragged (kind 0).
         public var maxRows: Int { min(s - 1, q + 2) }
+        /// The widest and tallest the rectangle may be made, in units.
+        public var maxW: Int {
+            guard kind != 0 else { return p }
+            var m = p
+            for sp in spots { m = max(m, sp.0) }
+            return m
+        }
+        public var maxH: Int {
+            guard kind != 0 else { return maxRows }
+            var m = q
+            for sp in spots { m = max(m, sp.1) }
+            return m
+        }
+        /// A unit's side in squares: the biggest of 5, 4, 3 that keeps the biggest rectangle in its room (so it shows at 75%).
+        public var c: Int { G3.cell(maxW, maxH, within: PerimArea3.room) }
+        public var note: String? { c < 5 ? "1 \(kind == 2 ? "tile" : "square m") is \(c) × \(c) squares here." : nil }
         public var um: String { kind == 2 ? "" : " m" }
         public var story: String {
             kind == 0 ? "The fence is \(P) m. One side is \(p) m." : kind == 1 ? "Make a garden of \(A) square m with a \(P) m fence." : "Make \(A) tiles into a rectangle with a fence of \(P)."
         }
         public func say(_ at: Int) -> String {
             switch at {
-            case 0: return story + (kind == 0 ? " Drag the other side." : " Drag the corner.")
+            case 0: return story + (kind == 0 ? " Drag the other side." : " Drag the corner.") + (note.map { " " + $0 } ?? "")
             case 1: return kind == 0 ? "Write the other side." : kind == 1 ? "Write \(p) × \(q)." : "Write \(p) + \(q) + \(p) + \(q)."
             default: return kind == 0 ? "Opposite sides match, so half the fence is one long and one short side." : kind == 1 ? "Same fence, different gardens." : "Same tiles, different fences."
             }
