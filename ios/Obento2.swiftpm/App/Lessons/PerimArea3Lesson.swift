@@ -50,7 +50,7 @@ struct PerimArea3Lesson: PaperLesson {
                 M3.edge(&live, rows: true, x: X0, y: Y0, at: Y0 + Double(q), span: Double(p), held: s.grabbed)
                 if s.grabbed { live.reads("\(p) + \(q) + \(p) + \(q) = \(2 * (p + q))") }
                 if ring { KK.hintBox(&pic, "hr", x: X0 - 3, y: Y0, w: 2, h: Double(maxH)) }
-                if spot { pic.line("sp", [(X0 - 0.5, Y0 + Double(P.q)), (X0 + Double(p) + 0.5, Y0 + Double(P.q))], ch, dashed: true) }
+                if spot { pic.circle("sp", at: X0 + Double(p) / 2, Y0 + Double(P.q), radius: 1, ch, dashed: true) }
             } else {
                 // where the corner can go: the fence's slant, dashed, or the rectangles the tiles make
                 let sp = P.spots

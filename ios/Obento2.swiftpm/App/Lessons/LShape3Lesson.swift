@@ -56,8 +56,8 @@ struct LShape3Lesson: PaperLesson {
                 }
                 // the notch's two sides: each label slid away from the inside corner, so a small notch's two don't meet
                 var along = horiz ? mx : my
-                if i == 1 { along += (pts[1].y - pts[2].y) * 0.2 }
-                if i == 2 { along += (pts[3].x - pts[2].x) * 0.25 }
+                if i == 1 { along += (pts[1].y - pts[2].y) * 0.35 }
+                if i == 2 { along += (pts[3].x - pts[2].x) * 0.35 }
                 pic.label("s\(i)", "\(P.lens[i])", S3P.small, side, edge: horiz ? my : mx, along: along)
             }
             let (Rd, Ra) = Self.rulers(P), kd = Int((s.h("kd") ?? Double(P.restDown)).rounded()), ka = Int((s.h("ka") ?? Double(P.restAcross)).rounded())

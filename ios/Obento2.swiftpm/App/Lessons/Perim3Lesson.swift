@@ -103,14 +103,14 @@ struct Perim3Lesson: PaperLesson {
         // the record
         var line = 1.0
         if P.kind != 1 && st >= 1 {
-            M7.row(&rec, "r0", [.n(P.a), .op("+"), .n(P.b), .op("="), M3.box("two", P.a + P.b, cells: 2, right: st >= 2)], x: 0, line: line)
+            M7.row(&rec, "r0", [.n(P.a), .op("+"), .n(P.b), .op("="), M3.box("two", P.a + P.b, cells: 3, right: st >= 2)], x: 0, line: line)
             line += 3
         }
         if st >= 3 {
             var toks: [M7.Tok] = []
             if P.kind == 2 { toks = [.n(P.a + P.b), .op("+"), .n(P.c)] }
             else { for (k, v) in P.S.enumerated() { if k > 0 { toks.append(.op("+")) }; toks.append(.n(v)) } }
-            toks += [.op("="), M3.box("P", P.P, cells: 2, right: st == 4), .w("cm")]
+            toks += [.op("="), M3.box("P", P.P, cells: 3, right: st == 4), .w("cm")]
             M7.row(&rec, "r1", toks, x: 0, line: line)
         }
         let xs = pts.map(\.x), ys = pts.map(\.y)

@@ -44,7 +44,7 @@ struct Area3Lesson: PaperLesson {
             M3.edge(&live, rows: true, x: X0, y: Y0, at: Y0 + Double(rows), span: L, held: s.grabbed)
             if s.grabbed { live.reads("\(S3.count(rows, "row", "rows")) of \(P.l)") }
             if ring { KK.hintBox(&pic, "hr", x: X0 - 3, y: Y0, w: 2, h: H) }
-            if spot { pic.line("sp", [(X0 - 0.5, Y0 + H), (X0 + L + 0.5, Y0 + H)], .chapter, dashed: true) }
+            if spot { pic.circle("sp", at: X0 + L / 2, Y0 + H, radius: 1, .chapter, dashed: true) }
         case 2:
             if ring { KK.hintBox(&pic, "hc", x: X0 + L, y: Y0, w: 3, h: H) }
             if spot { S3P.count(&pic, "sp", "\(P.A)", x: X0 + L, y: Y0 + H - 0.5) }

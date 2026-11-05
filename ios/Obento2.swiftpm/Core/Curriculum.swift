@@ -101,7 +101,7 @@ public enum Curriculum {
             MapLesson("g2-shapes", "Sides and corners"), MapLesson("g2-solids", "Faces, edges and corners"), MapLesson("g2-shares", "Halves, thirds and fourths")]),
     ]
 
-    /// 3rd grade (design/grade3.md): 28 lessons in 7 chapters, in teaching order. Chapters 1 to 3 are built (4 Nov): only built chapters are on the map.
+    /// 3rd grade (design/grade3.md): 28 lessons in 7 chapters, in teaching order. Chapters 1 to 4 are built (4 Nov): only built chapters are on the map.
     static let grade3: [MapChapter] = [
         MapChapter("g3-muldiv", "Multiply and divide", colour: "whole", [
             MapLesson("g3-facts", "Multiplication facts"), MapLesson("g3-divfacts", "Division facts"), MapLesson("g3-unknown", "Find the missing number"),
