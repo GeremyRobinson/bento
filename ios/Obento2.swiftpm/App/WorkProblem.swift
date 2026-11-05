@@ -535,26 +535,36 @@ final class WorkProblem: Identifiable, PageProblem {
         func place(_ text: String?, _ words: Sketch.Words) -> (frame: CGRect, note: CGRect?, rows: Int) {
         var line = base, r = start
         // what a miss says, on whole rows of squares just above the line (a square clear of it), as wide as the line,
-        // and above anything of the record or any words of the picture it would run into
+        // and above anything of the record or the picture it would run into (its words and its drawn pieces alike: nothing
+        // is written over the picture, G's rule); when that climbs so far the frame drops under 75%, under the line
+        // instead (Check included), in the first clear rows there
         var note: CGRect?, rows = 0
         if let text {
             let left = (line.minX / sq).rounded(.down) * sq, width = max(16 * sq * k, (line.maxX / sq).rounded(.up) * sq - left)
             let f = PaperText.font(words.size * k, words.weight)
             rows = max(1, PaperText.wrap(text, f, width: width).count)
             let h = Double(rows) * Sketch.row * k
-            var bottom = (line.minY / sq).rounded(.down) * sq - sq
-            if let p = paper {
-                let d = p.draw(state())
+            let d = paper?.draw(state())
+            // the note's top, moved past whatever it touches (with half a square between), up or down
+            func clear(_ top0: Double, up: Bool) -> Double {
+                var top = top0
+                guard let d else { return top }
                 for _ in 0..<12 {
-                    let band = CGRect(x: left, y: bottom - h, width: width, height: h + 0.5 * sq)
-                    let hit = [d.record.bounds(touching: band.offsetBy(dx: -layout.workOffset.x, dy: -layout.workOffset.y))?.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y),
-                               d.picture.bounds(touching: band.offsetBy(dx: -layout.pictureOffset.x, dy: -layout.pictureOffset.y), words: true)?.offsetBy(dx: layout.pictureOffset.x, dy: layout.pictureOffset.y)]
-                        .compactMap { $0 }.reduce(CGRect.null) { $0.union($1) }
+                    let band = CGRect(x: left, y: up ? top : top - 0.5 * sq, width: width, height: h + 0.5 * sq)
+                    let rb = d.record.bounds(touching: band.offsetBy(dx: -layout.workOffset.x, dy: -layout.workOffset.y))?.offsetBy(dx: layout.workOffset.x, dy: layout.workOffset.y)
+                    let pb = d.picture.bounds(touching: band.offsetBy(dx: -layout.pictureOffset.x, dy: -layout.pictureOffset.y))?.offsetBy(dx: layout.pictureOffset.x, dy: layout.pictureOffset.y)
+                    let hit = (rb ?? .null).union(pb ?? .null)
                     if hit.isNull { break }
-                    bottom = (hit.minY / sq).rounded(.down) * sq - sq
+                    top = up ? (hit.minY / sq).rounded(.down) * sq - sq - h : (hit.maxY / sq).rounded(.up) * sq + sq
                 }
+                return top
             }
-            let n = CGRect(x: left, y: bottom - h, width: width, height: h)
+            var n = CGRect(x: left, y: clear((line.minY / sq).rounded(.down) * sq - sq - h, up: true), width: width, height: h)
+            func shows(_ q: CGRect) -> Double { z(line.union(q).insetBy(dx: -sq, dy: -sq)) }
+            if shows(n) < least {
+                let m = CGRect(x: left, y: clear((line.maxY / sq).rounded(.up) * sq + sq, up: false), width: width, height: h)
+                if shows(m) > shows(n) { n = m }
+            }
             note = n
             line = line.union(n)
         }

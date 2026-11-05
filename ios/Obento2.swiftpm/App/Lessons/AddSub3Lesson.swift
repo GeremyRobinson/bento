@@ -12,7 +12,7 @@ import SwiftUI
 /// the opens done on this slide, "need" (slid with too few: open one first), "picked"/"wrong" a story's pick.
 @MainActor
 struct AddSub3Lesson: PaperLesson {
-    static let TY = 3.0, BY = 18.0, rec = 27.0
+    static let TY = 3.0, BY = 17.0, rec = 25.0
     static let places = [100, 10, 1]
     /// A disk's radius: its worth ("100") clear of its ring.
     static let r = 1.35
