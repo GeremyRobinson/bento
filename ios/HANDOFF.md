@@ -530,6 +530,28 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   -numbers kind=2,hour=3,minute=25 -wrong`, `page-g2-coins-2 -numbers kind=1,coin=1,other=2 -wrong`, `page-g2-money-0 -numbers
   q=2,d=1,n=1,p=3 -drag 4,4,33,13 -hold` (`page-g2-money-2 … -showme -slow 1.5` filmed), `page-g2-dollars-0 -numbers kind=0,b10=2,b5=1,b1=2
   -wrong`, `page-g2-dollars-0 -numbers kind=2,who=0,A=45,p=30,item=0 -drag 5,12,32,22 -hold`.
+- 2nd grade chapter 7, Shapes, is built (4 Nov; the last chapter: all 27 lessons and the 2nd grade test are on the map; Core: `Shapes2`
+  (`Sides2` g2-shapes, `Solids2` g2-solids, `Shares2` g2-shares), tests `Shapes2Tests`; App: `Sides2Lesson`, `Solids2Lesson` (3D on
+  `PaperStand`), `Shares2Lesson`). Teal. As the preview (`design/prototype/grade2-ch7.html`), its words, slips and generators word for word;
+  the one number written (`[3] thirds make 1 whole`) typed with the iPad's keys. Sides and corners: tap each corner or trace each side (they
+  light and count, `5 corners · 5 sides`), Check; tap its name (a square or rectangle "is a quadrilateral too", `Sides2.pickCode`); draw
+  one in a 30 × 22 dashed patch (tap the first corner to close, drag a corner to fix a cross). Faces, edges and corners: the base flat, drag
+  the paper up and the solid rises from it (`Solids.Play`), true 3D faces through the long lens; turn it with a finger (7° a square,
+  snapping to 15°); hidden edges dashed and counted edges, numbers and dots drawn on the board (it's nearer the eye, so over the solid);
+  its Check and names are its own blocks on the board (the layout's lesson blocks don't show while the paper stands); Show me taps what
+  shows, then turns it to where most of the rest shows, until all are counted (the shots' How to loops until a problem is solved, so
+  every step's demo must solve it). Halves, thirds and fourths: cut with the ruler (`Shares2.snap`, `cutting`: codes for every miss line),
+  the parts number and glide onto the first; Same size? cuts a part into pieces that slide onto the other copy's (`dissect`).
+  Departures: the square is 24 a side and the circle 30 across (the design's 36 showed at 65–71%); the solid turns over at most a
+  quarter turn each way (the preview half), its readout, Check and names beside it (under it showed at 70%); the name slips take two
+  rows. Hints: a first miss rings the shape, patch, solid, names or picture; a second the next uncounted corner, an example shape dashed,
+  the next face/edge/corner that shows, the right name, the cuts dashed, the next part to shade, or the number by the box. Least zooms:
+  78%, 76%, 78%; keys up 75%. Shots e.g. `page-g2-shapes-0 -partial -numbers kind=0,n=5,variant=0,x0=12,y0=0,x1=25,y1=9,x2=20,y2=22,x3=4,
+  y3=22,x4=0,y4=9 -tapsq 12,0,25,9`, `page-g2-shapes-0 -numbers kind=1,n=5 -wrong2`, `page-g2-solids-1 -numbers solid=1,turn=2 -wrong`,
+  `page-g2-solids-1 -numbers solid=1,turn=0 -drag 15,10,28,10 -hold` (a turn held), `page-g2-shares-0 -numbers shape=0,parts=3,cut=0,
+  shaded=2,other=-1 -drag 16,1,16,23 -hold` (`-showme -pause 2 -slow 1.5` filmed), `page-g2-shares-1 -numbers shape=1,parts=4,cut=0,
+  shaded=1,other=2` (the slide), `map-started -grade 2 -whole`.
+- A ¢ after an answer box hugs it, as a letter does (`M7.hugs`, shared: Name the coin, Counting money, Dollars and cents).
 - Taps (4 Nov, shared): a finger that slips under 12 pt as it taps is one tap (`PaperModel.slip`, `fingerTap`, `cancelGrab`). Before, such
   a tap started a drag: on nothing grabbable it panned the paper (the tap lost once the slip passed the system tap's ~10 pt, and the pan
   coasted, so the next tap only stopped the paper); on a grabbable piece (Hundreds' last ten) the release and the tap both counted.
