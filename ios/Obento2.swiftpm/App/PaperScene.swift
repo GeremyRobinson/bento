@@ -253,6 +253,14 @@ extension Piece {
         case "g2-makegraph": return [box(3, 1, 5, 1.2)]                          // the bar made to its tally
         case "g2-bargraph": return [box(6.5, 1, 1.5, 1.2)]                       // the part sticking out
         case "g2-lineplot": return [box(4, 1.5, 1, 3)]                           // the tallest stack
+        // 2nd grade, Time and money (4 Nov)
+        case "g2-time5":                                                         // the face shaded from 12 to the long hand
+            var pts = [CGPoint(x: at.x + 3 * c, y: at.y + 3 * c)]
+            for k in 0...10 { let t = Double(k) / 10 * 2.6; pts.append(CGPoint(x: at.x + (3 + 3 * sin(t)) * c, y: at.y + (3 - 3 * cos(t)) * c)) }
+            return [pts]
+        case "g2-coins": return [box(6.6, 2.1, 2.8, 2.8)]                       // the small coin worth more
+        case "g2-money": return [box(4, 0, 3, 3), box(7, 0, 1, 1)]               // a quarter's block, a dime's row
+        case "g2-dollars": return [box(5, 0.5, 5, 1), box(5, 1.5, 2, 0.5)]       // the dollars counted in
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
         case "g6-mean": return [box(0, 0, 2, 2)]                                // the squares that level the bars
@@ -568,6 +576,28 @@ extension Piece {
                 var out: [[CGPoint]] = [box(0, 1, 7, 1.5), line((0, 4.5), (10, 4.5))]
                 out += ticks(4.5, 1, 10, 0.4)
                 for (a, b) in [(7.0, 5.0), (5.0, 4.0)] { out.append((0...8).map { k -> CGPoint in let t = Double(k) / 8; return P(a + (b - a) * t, 4.5 - sin(.pi * t) * 0.8) }) }
+                return out
+            }
+        case "g2-time5", "g2-coins", "g2-money", "g2-dollars":
+            func ring(_ cx: Double, _ cy: Double, _ r: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + r * cos(a), cy + r * sin(a)) } }
+            switch id {
+            case "g2-time5": // a clock, its hands; the hour strip beside it: 10 by 6
+                var out: [[CGPoint]] = [ring(3, 3, 3), line((3, 3), (3 + 2.4 * sin(2.6), 3 - 2.4 * cos(2.6))), line((3, 3), (4.2, 2.1))]
+                for k in 0..<12 { let t = Double(k) / 12 * 2 * .pi; out.append(line((3 + 2.6 * sin(t), 3 - 2.6 * cos(t)), (3 + 3 * sin(t), 3 - 3 * cos(t)))) }
+                out.append(box(7, 1.5, 3, 1)); out.append(line((8, 1.5), (8, 2.5))); out.append(line((9, 1.5), (9, 2.5)))
+                return out
+            case "g2-coins": // a big smooth coin and a small bumpy one: 10 by 6
+                var out: [[CGPoint]] = [ring(3, 3, 3), ring(3, 3, 2.6), ring(8, 3.5, 1.4), ring(8, 3.5, 1.15)]
+                for k in 0..<16 { let t = Double(k) / 16 * 2 * .pi; out.append(line((8 + 1.15 * cos(t), 3.5 + 1.15 * sin(t)), (8 + 1.4 * cos(t), 3.5 + 1.4 * sin(t)))) }
+                return out
+            case "g2-money": // coins fanned at the left, the dollar square in four blocks: 10 by 6
+                var out: [[CGPoint]] = [box(4, 0, 6, 6), line((7, 0), (7, 6)), line((4, 3), (10, 3))]
+                for (cx, cy) in [(0.8, 1.0), (1.8, 1.0), (0.7, 3.0), (1.5, 3.0), (0.7, 4.9)] { out.append(ring(cx, cy, 0.7)) }
+                return out
+            default: // bills fanned, the dollar chart's rows: 10 by 6
+                var out: [[CGPoint]] = [box(0, 0.5, 3, 1.5), box(0.8, 0.5, 3, 1.5), box(0, 3, 3, 1.5), box(5, 0.5, 5, 5)]
+                for r in 1..<5 { out.append(line((5, 0.5 + Double(r)), (10, 0.5 + Double(r)))) }
+                out.append(line((7.5, 0.5), (7.5, 5.5)))
                 return out
             }
         case "g2-makegraph", "g2-bargraph", "g2-lineplot":
