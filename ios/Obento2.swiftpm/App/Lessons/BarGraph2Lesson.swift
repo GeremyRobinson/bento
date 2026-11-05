@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Bar graphs on the paper, as in the preview (design/prototype/grade2-ch5.html, dBarGraph): a vote is a block, as in Make a
-/// graph. The web's question on the picture's top rows (said as the problem opens), the title under it from the left (a hop
-/// over the top bar clears it), four bars 4 squares
+/// graph. The web's question on the picture's top rows (said as the problem opens), the title under it (a hop over the top bar
+/// stays under it), four bars 4 squares
 /// tall a square apart with their names at their left, the scale 0–10 under them on the strong lines. Drop a line: grab the
 /// graph and drag; a dashed line drops from the bar under the finger to the scale and the number it lands on lights (the
 /// bar lights while it's read; the readout at the title row's right end). How many more: the shorter bar's end drops a
@@ -14,7 +14,7 @@ import SwiftUI
 struct BarGraph2Lesson: PaperLesson {
     var liveKeys: Set<String> { ["j", "v"] }
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
-    static let GX = 10.0, TT = 3.5, BY = 5.0
+    static let GX = 10.0, TT = 4.0, BY = 6.0
     static func rowY(_ j: Int) -> Double { BY + 5 * Double(j) }
     static let SY = BY + 20, ROW = SY + 5
     static func blocks(_ x: Double) -> Int { max(0, min(10, Int(((x - GX) / 5).rounded()))) }
@@ -31,7 +31,7 @@ struct BarGraph2Lesson: PaperLesson {
         let P = BarGraph2.Parts(s.numbers), st = at(s), GX = Self.GX, SY = Self.SY
         var pic = GridPen(), live = GridPen(stableIds: true), rec = GridPen()
         A2.tell(&pic, [P.question], width: 60)
-        pic.word("title", P.th.title, at: 0, Self.TT, DK2.say, anchor: UnitPoint(x: 0, y: 0.5))
+        pic.word("title", P.th.title, at: GX + 25, Self.TT, DK2.say)
         let held = s.grabbed && st < 2, hj = held ? Int(s.h("j") ?? 0) : -1, hv = Int(s.h("v") ?? 0)
         for j in 0..<4 {
             let y = Self.rowY(j)
@@ -63,7 +63,7 @@ struct BarGraph2Lesson: PaperLesson {
             pic.stripes("out", col: cx, row: xs, w: 5 * Double(P.a - P.b), h: 4)
             let c = st == 2 ? LN2.chain(s, "h") : LN2.Chain(f: P.b, t: P.a)
             if let c {
-                LN2.hops(&pic, &live, held: s.grabbed, "hp", c.f, c.t, x0: GX, per: 5, row: xs, height: 0.8)
+                LN2.hops(&pic, &live, held: s.grabbed, "hp", c.f, c.t, x0: GX, per: 5, row: xs, height: 0.5)
                 if st == 2, c.t != c.f {
                     let ro = "\(abs(c.t - c.f))"
                     if s.grabbed { DK2.readoutEnd(&live, ro, x: GX + 50, y: Self.TT); live.reads(ro) } else { DK2.readoutEnd(&pic, ro, x: GX + 50, y: Self.TT) }

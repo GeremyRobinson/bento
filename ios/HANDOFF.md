@@ -488,6 +488,26 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   and centimeters' long ruler is cut at the keys' edge, its record line in full). Shots e.g. `page-g2-measure-0 -numbers unit=1,th=0,start=2,end=9
   -drag 4,3.5,14,3.5 -hold`, `page-g2-twounits-4 -numbers inches=8 -wrong`, `page-g2-estimate-1 -numbers fold=1,u=0,thing=2,len=7 -drag
   0,9.5,30,9.5 -hold`, `page-g2-numline-1 -numbers kind=1,a=45,b=18,th=0,who=0,other=1 -showme -slow 1.5`.
+- 2nd grade chapter 5, Data, is built (4 Nov; Core: `Data2` (`MakeGraph2` g2-makegraph, `BarGraph2` g2-bargraph, `LinePlot2` g2-lineplot),
+  tests `Data2Tests`; App: `MakeGraph2Lesson`, `BarGraph2Lesson`, `LinePlot2Lesson`, their shared `DataKit2` (`DK2`: tally marks a square
+  apart, 3 tall, a bundle a block wide; bars a block a vote with a line between blocks; the scale; an X in its cell; the readout at the
+  title row's right end); five more row pictures in `L5.shapes` (pear, bird, wind, cookie, paint)). Pink. As the preview
+  (`design/prototype/grade2-ch5.html`), its words, slips and generators word for word; typed with the iPad's keys. Make a graph: tap to
+  add the pictures (a tap past the tally shows the extra picture red until the next touch) or drag each bar's end, any order, a tick
+  once a row's made; `7 + 4 + 6 + 3 = [20] in all`; the missing row's story is said with each line as the preview's ("20 children
+  voted. Drag the pears bar."), `20 − 17 = [3]`. Bar graphs: drop a line (grab the graph, the bar under the finger lights, the dashed
+  line lands on the scale), hop the part sticking out or tap to count on along the second bar; the question on the top rows (`told`).
+  Line plots: place an X (dragged from its holder; it glides from where it's let go, `KM.seeded`), tap a stack to count, tap the
+  tallest, hop under the line. Departures: Make a graph's tally chart sits beside the graph (each row's picture, name and marks at its
+  left) instead of over it, and its readout is at the title row's right end (on top it was 69%); the line plot's fold plots on the inch
+  ruler itself (the X's stack on its top edge, the five things lie under it from 0, the ruler's marks hang down to them) instead of a
+  second line under the ruler (72%); Bar graphs' hops are lower (0.5) so they stay under the title. Hints: a first miss rings the row,
+  the bar, the part sticking out, the stack or the line; a second rings the block, the scale number, the mark or the next X, or writes
+  the number by the box. Least zooms: 78%, 76%, 78% (keys up too). Shots e.g. `page-g2-makegraph-0 -numbers
+  kind=0,theme=0,c0=4,c1=2,c2=5,c3=3 -tapsq 22.5,7,27.5,7,22.5,12 -tapgap 1.2`, `page-g2-makegraph-0 -numbers
+  kind=2,theme=1,c0=5,c1=3,c2=6,c3=2,mx=2 -wrong2`, `page-g2-bargraph-0 -numbers theme=0,v0=7,v1=4,v2=5,v3=2,x=0,y=1,kind=0 -drag 44,8,44,21
+  -hold`, `page-g2-lineplot-0 -numbers thing=1,lo=3,n=5,d0=3,d1=5,d2=5,d3=7,d4=8,fold=1,p0=0,p1=1,p2=0,p3=0,p4=1 -wrong2`,
+  `page-g2-lineplot-0 -numbers thing=0,lo=4,n=8,d0=4,d1=5,d2=5,d3=6,d4=6,d5=6,d6=7,d7=8,ask=0,v=6 -showme -pause 2 -slow 2`.
 - Taps (4 Nov, shared): a finger that slips under 12 pt as it taps is one tap (`PaperModel.slip`, `fingerTap`, `cancelGrab`). Before, such
   a tap started a drag: on nothing grabbable it panned the paper (the tap lost once the slip passed the system tap's ~10 pt, and the pan
   coasted, so the next tap only stopped the paper); on a grabbable piece (Hundreds' last ten) the release and the tap both counted.

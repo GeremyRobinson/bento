@@ -9,7 +9,8 @@ import SwiftUI
 /// The fold: the plot drawn on the inch ruler itself (its X's stack on the ruler's top edge), the five things lying under it
 /// from 0, each with its X at its end; put each X above its length, then tap the tallest stack.
 ///
-/// Hand while an X is dragged: "grab", "i", "px", "py", "u" (−1: off the line). Kept: "pl<i>" an X placed, "q<n>" the stack
+/// Hand while an X is dragged: "grab", "i", "px", "py", "u" (−1: off the line). Kept: "pl<i>" an X placed (and "rx<i>",
+/// "ry<i>" where it was let go, so it glides from there), "q<n>" the stack
 /// the n-th count tapped; the hop's (LN2).
 @MainActor
 struct LinePlot2Lesson: PaperLesson {
@@ -135,7 +136,10 @@ struct LinePlot2Lesson: PaperLesson {
         for (u, ids) in st {
             for (j, id) in ids.enumerated() {
                 let top = LY - XH * Double(j + 1), n = nums[id], on = id == "new" || n != nil || tallLit == u
-                DK2.xMark(&pic, "x\(id)\(on)", x: G.X(u) - 2.5, top: top, h: XH, on ? .chapter : .ink)
+                let i = id == "new" ? 0 : Int(id.dropFirst()) ?? 0, key = "x\(id)\(on)", col: Sketch.Colour = on ? .chapter : .ink
+                // a placed X glides from where the finger let it go
+                let was: ((inout GridPen) -> Void)? = s.run.kept["rx\(i)"].map { rx in { p in DK2.xMark(&p, key, x: rx - 2.5, top: (s.run.kept["ry\(i)"] ?? 0) - XH / 2, h: XH, col) } }
+                KM.seeded(&pic, was: G.P.toPlace > 0 ? was : nil) { p in DK2.xMark(&p, key, x: G.X(u) - 2.5, top: top, h: XH, col) }
                 if let n { pic.word("xn\(id)\(n)", "\(n)", at: G.X(u) + 1.8, top + XH / 2, KK.lit, anchor: UnitPoint(x: 0, y: 0.5)) }
             }
         }
@@ -221,7 +225,7 @@ struct LinePlot2Lesson: PaperLesson {
                     guard u >= 0 else { return HandMove(hand: [:]) }
                     if u != P.home(i) { return HandMove(hand: [:], missHand: [:], set: [("p", Double(100 * i + u))], check: true) }
                     let all = (0..<P.toPlace).allSatisfy { $0 == i || placed(s, G, $0) }
-                    return HandMove(hand: [:], missHand: [:], set: all ? [("p", Double(LinePlot2.allPlaced))] : [], keep: ["pl\(i)": 1], check: all)
+                    return HandMove(hand: [:], missHand: [:], set: all ? [("p", Double(LinePlot2.allPlaced))] : [], keep: ["pl\(i)": 1, "rx\(i)": h["px"] ?? 0, "ry\(i)": h["py"] ?? 0], check: all)
                 })
         case .count, .tall:
             let st = stacks(s, G), nums = numbered(s, G)

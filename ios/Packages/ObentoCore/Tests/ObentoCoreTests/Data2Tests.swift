@@ -16,6 +16,13 @@ final class Data2Tests: XCTestCase {
     }
     private func hop(_ a: Int, _ b: Int) -> Double { Double(Len2.code(a, b)) }
 
+    func testOnTheMap() {
+        let ch = Curriculum.chapters(2)[4]
+        XCTAssertEqual(ch.title, "Data"); XCTAssertTrue(Curriculum.built(ch))
+        for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)) }
+        XCTAssertEqual(Spoken.text("That's 3 in. Hop to the X farthest right."), "That's 3 inches. Hop to the X farthest right.")
+    }
+
     func testMakeGraph() {
         var l = LessonRun(MakeGraph2.spec, numbers: MakeGraph2.numbers(kind: 0, theme: 0, counts: [7, 4, 6, 3]))
         XCTAssertEqual(l.steps.count, 3)
