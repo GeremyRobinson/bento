@@ -508,6 +508,28 @@ direction), then `design/README.md` (the design language) and `design/grade5.md`
   kind=2,theme=1,c0=5,c1=3,c2=6,c3=2,mx=2 -wrong2`, `page-g2-bargraph-0 -numbers theme=0,v0=7,v1=4,v2=5,v3=2,x=0,y=1,kind=0 -drag 44,8,44,21
   -hold`, `page-g2-lineplot-0 -numbers thing=1,lo=3,n=5,d0=3,d1=5,d2=5,d3=7,d4=8,fold=1,p0=0,p1=1,p2=0,p3=0,p4=1 -wrong2`,
   `page-g2-lineplot-0 -numbers thing=0,lo=4,n=8,d0=4,d1=5,d2=5,d3=6,d4=6,d5=6,d6=7,d7=8,ask=0,v=6 -showme -pause 2 -slow 2`.
+- 2nd grade chapter 6, Time and money, is built (4 Nov; Core: `TimeMoney2` (`TM2` coins, groups, the dollar square's cells, `Time5`
+  g2-time5, `Coins2` g2-coins, `Money2` g2-money, `Dollars2` g2-dollars), tests `TimeMoney2Tests`; App: `Time5Lesson`, `Coins2Lesson`,
+  `Money2Lesson` (with `SlideIn`, the slide-in-and-count kit Dollars' bills use too), `Dollars2Lesson`, their shared `TimeMoneyKit2` (`TMK`:
+  coins in their own faint colours, penny copper (call of 3 Nov), only what shows past the coin over each in a fanned row; a cent, crossed
+  out when spent; the dollar square; bills)). Amber. As the preview (`design/prototype/grade2-ch6.html`), its words, slips and generators
+  word for word; typed with the iPad's keys. A time of day ("School ends.") and a story ("Ben has 65¢.") start every line, as the
+  preview's one-row header. `Spoken` says 3:05 as "3 oh 5", a.m./p.m., $27 as "27 dollars", a $5 bill as "a 5 dollar bill", $1.35 as
+  "1 dollar and 35 cents". Time: tap the hour, trace from 12 (the face shades a number at a time, 5, 10 … outside the edge, the strip a
+  square for 5 minutes), write [3]:[25]; a.m./p.m. picked, then the day strip; or turn the long hand to a written time. Coins: tap its
+  name (its edge traces), `A dime is [10]¢`, its cents beside it; the pair, tap the one worth more. Money: slide each kind into the
+  square (its cents pour from where it's let go), write each running total. Dollars: bills into the dollar chart the same way; fill a
+  dollar by tapping, slide a price tag over the cents (crossed out), slide the second amount's coins in. Departures: Money's and the
+  bills' running totals are written down the target's right side (along a row under the square showed at 70%); the stories' record is
+  left of the square under the readout, for the same reason; the first amount's cents glide in from the left as the picture draws (its
+  coins aren't drawn first); a pair's quarter shows its 25 cents in rows of ten (five rows was 68%); the pair's name blocks sit 2 rows
+  lower so the names written under the coins clear them. Hints: a first miss rings the short hand, 12, the strip, the picks, the coin,
+  the kind to slide, the tag or the square; a second the hour, the long hand's number, the right name block or coin, the target, or
+  the answer by the box. Least zooms: 76%, 79%, 82%, 76%; keys up 75%. Shots e.g. `page-g2-time5-1 -numbers kind=0,hour=3,minute=25
+  -path 15,8,19.2,9.8,21,14,19.2,18.2,18,19.2 -hold`, `page-g2-time5-3 -numbers kind=1,hour=2,minute=15,e=5 -wrong`, `page-g2-time5-0
+  -numbers kind=2,hour=3,minute=25 -wrong`, `page-g2-coins-2 -numbers kind=1,coin=1,other=2 -wrong`, `page-g2-money-0 -numbers
+  q=2,d=1,n=1,p=3 -drag 4,4,33,13 -hold` (`page-g2-money-2 … -showme -slow 1.5` filmed), `page-g2-dollars-0 -numbers kind=0,b10=2,b5=1,b1=2
+  -wrong`, `page-g2-dollars-0 -numbers kind=2,who=0,A=45,p=30,item=0 -drag 5,12,32,22 -hold`.
 - Taps (4 Nov, shared): a finger that slips under 12 pt as it taps is one tap (`PaperModel.slip`, `fingerTap`, `cancelGrab`). Before, such
   a tap started a drag: on nothing grabbable it panned the paper (the tap lost once the slip passed the system tap's ~10 pt, and the pan
   coasted, so the next tap only stopped the paper); on a grabbable piece (Hundreds' last ten) the release and the tap both counted.

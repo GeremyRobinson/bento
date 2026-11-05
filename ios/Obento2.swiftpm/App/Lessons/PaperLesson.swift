@@ -307,6 +307,7 @@ enum PaperLessons {
         case "g2-time5": return Time5Lesson()
         case "g2-coins": return Coins2Lesson()
         case "g2-money": return Money2Lesson()
+        case "g2-dollars": return Dollars2Lesson()
         default: return nil
         }
     }

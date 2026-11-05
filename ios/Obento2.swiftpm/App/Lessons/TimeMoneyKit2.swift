@@ -85,9 +85,14 @@ enum TMK {
     /// The n-th cent's cell in the dollar square at (x, y).
     static func centAt(_ n: Int, x: Double, y: Double) -> CGPoint { let p = TM2.centAt(n); return CGPoint(x: x + Double(p.x), y: y + Double(p.y)) }
     /// A bill, 10 × 4 squares, its value at its top-left (the part a fanned row still shows).
-    static func bill(_ pen: inout GridPen, _ id: String, _ v: Int, x: Double, y: Double) {
-        pen.fill(id + "bg", col: x, row: y, w: 10, h: 4, .paper)
+    /// `covered`: a bill lies over it 3 squares on, so only its first 3 squares' edges show.
+    static func bill(_ pen: inout GridPen, _ id: String, _ v: Int, x: Double, y: Double, covered: Bool = false) {
         pen.fill(id + "f", col: x, row: y, w: 10, h: 4, colour(TM2.dime))
+        if covered {
+            pen.line(id + "o", [(x + 3, y), (x, y), (x, y + 4), (x + 3, y + 4)])
+            pen.word(id + "v", "$\(v)", at: x + 0.4, y + 1, LN2.small.colour(.ink), anchor: UnitPoint(x: 0, y: 0.5))
+            return
+        }
         pen.sketch.box(id + "o", pen.R(x, y, 10, 4), .ink, width: Sketch.stroke)
         var oval: [(Double, Double)] = []
         for k in 0...32 { let a = Double(k) / 32 * 2 * .pi; oval.append((x + 6 + 1.6 * cos(a), y + 2 + 1.2 * sin(a))) }

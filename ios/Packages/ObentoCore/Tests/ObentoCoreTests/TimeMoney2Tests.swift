@@ -15,6 +15,12 @@ final class TimeMoney2Tests: XCTestCase {
         return spec.check.map { $0.draw(spec, using: &rng) }
     }
 
+    func testOnTheMap() {
+        let ch = Curriculum.chapters(2)[5]
+        XCTAssertEqual(ch.title, "Time and money"); XCTAssertTrue(Curriculum.built(ch))
+        for l in ch.lessons { XCTAssertEqual(Lessons.spec(l.id)?.title, l.name); XCTAssertTrue(Curriculum.voiced(l.id)) }
+    }
+
     func testSpoken() {
         XCTAssertEqual(Spoken.text("That's 3:05. Keep going."), "That's 3 oh 5. Keep going.")
         XCTAssertEqual(Spoken.text("Make it 7:45."), "Make it 7 45.")

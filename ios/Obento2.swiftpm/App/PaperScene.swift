@@ -258,7 +258,10 @@ extension Piece {
             var pts = [CGPoint(x: at.x + 3 * c, y: at.y + 3 * c)]
             for k in 0...10 { let t = Double(k) / 10 * 2.6; pts.append(CGPoint(x: at.x + (3 + 3 * sin(t)) * c, y: at.y + (3 - 3 * cos(t)) * c)) }
             return [pts]
-        case "g2-coins": return [box(6.6, 2.1, 2.8, 2.8)]                       // the small coin worth more
+        case "g2-coins":                                                         // the small coin worth more
+            var pts: [CGPoint] = []
+            for k in 0..<32 { let t = Double(k) / 32 * 2 * .pi; pts.append(CGPoint(x: at.x + (8 + 1.15 * cos(t)) * c, y: at.y + (3.5 + 1.15 * sin(t)) * c)) }
+            return [pts]
         case "g2-money": return [box(4, 0, 3, 3), box(7, 0, 1, 1)]               // a quarter's block, a dime's row
         case "g2-dollars": return [box(5, 0.5, 5, 1), box(5, 1.5, 2, 0.5)]       // the dollars counted in
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
