@@ -324,6 +324,7 @@ enum PaperLessons {
         case "g3-mult10": return Tens3Lesson()
         // 3rd grade, Place value (4 Nov 2026)
         case "g3-round": return Round3Lesson()
+        case "g3-addsub": return AddSub3Lesson()
         default: return nil
         }
     }
