@@ -599,8 +599,8 @@ public enum Liters3 {
         /// The labels: every mark up to 10 marks, every other up to 20, else every fifth.
         public var every: Int { n <= 10 ? 1 : n <= 20 ? 2 : 5 }
         public var marks: Int { value / step }
-        /// A liter's squares: the jug 40 tall.
-        public var per: Int { cap == 20 ? 2 : cap == 10 ? 4 : 8 }
+        /// A liter's squares, the preview's: the jug 20 or 30 tall (40 showed at 61%).
+        public var per: Int { cap == 20 ? 1 : cap == 10 ? 3 : 6 }
         public var note: String { "1 liter is \(Ms3.plural(per, "square", "squares")) tall here." }
         public var eachSlips: [(Int, String)] {
             var s: [(Int, String)] = []

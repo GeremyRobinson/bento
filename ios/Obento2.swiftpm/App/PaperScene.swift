@@ -298,8 +298,14 @@ extension Piece {
         case "g3-fracline": return [box(5.6, 3.6, 0.8, 0.8)]                    // the point
         case "g3-equiv": return [box(3.6, 1.6, 0.8, 0.8), box(3.6, 5.6, 0.8, 0.8)] // the same point on both lines
         case "g3-fraccompare": return [box(0, 0, 6, 2), box(0, 3, 5, 2)]        // 3/4 and 5/8 shaded
+        // 3rd grade, Data (4 Nov)
+        case "g3-graphs": return [box(0, 1, 7, 1.2)]                            // the bar read, its line dropped to the scale
+        case "g3-drawgraph": return [box(0, 4.2, 4.5, 1.2)]                     // the bar being dragged to its number
+        case "g3-lineplot": return [box(6, 2.6, 1.5, 1.2)]                      // the part past the whole inches, hopped
         // 3rd grade, Time and measuring (4 Nov)
         case "g3-elapsed": return [box(0.8, 5, 1.6, 0.6), box(8.4, 5, 1.2, 0.6)]   // the minutes before and after the hours
+        case "g3-liters": return [box(3, 2.5, 5, 3.5)]                          // the water
+        case "g3-mass": return [box(2, 0.6, 4, 1.8)]                            // the thing on the pan
         case "g3-clock": return [box(0, 5, 7.8, 0.5)]                           // the hour line filled to the long hand
         case "g6-dotplot": return [box(5, 2, 1, 4)]                               // the tallest stack
         case "g6-histogram": return [box(5, 1, 2, 5)]                           // the tallest stretch
@@ -722,6 +728,17 @@ extension Piece {
             var out: [[CGPoint]] = [line((0, 4), (10, 4)), arc(0.8, 2.4, 1), arc(2.4, 8.4, 2.6), arc(8.4, 9.6, 0.9)]
             for x in [0.0, 2.4, 8.4] { out.append(line((x, 3.3), (x, 4))) }
             return out
+        case "g3-liters": // a tall jug, its marks on the left wall, the water to its level, hops up the wall: 10 by 6
+            var out: [[CGPoint]] = [line((3, 0), (3, 6), (8, 6), (8, 0)), line((3, 2.5), (8, 2.5))]
+            for k in 1..<6 { out.append(line((3, 6 - Double(k)), (k % 2 == 0 ? 3.8 : 3.5, 6 - Double(k)))) }
+            for k in 0..<3 { let a = 6 - Double(k) * 1.15, b = a - 1.15; out.append((0...8).map { i in let t = Double(i) / 8; return P(4.2 + sin(.pi * t) * 0.7, a + (b - a) * t) }) }
+            return out
+        case "g3-mass": // a kitchen scale, a thing on its pan, its dial's needle; the dial laid straight beside: 10 by 6
+            func ring(_ cx: Double, _ cy: Double, _ r: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + r * cos(a), cy + r * sin(a)) } }
+            var out: [[CGPoint]] = [box(1, 3, 6, 3), line((0, 2.5), (8, 2.5)), line((4, 2.5), (4, 3)), box(2, 0.6, 4, 1.8), ring(4, 4.5, 1), line((4, 4.5), (4.7, 3.8))]
+            out.append(box(8.5, 0, 1.5, 6))
+            for k in 1..<6 { out.append(line((8.5, Double(k)), (k % 5 == 0 ? 10 : 9.1, Double(k)))) }
+            return out
         case "g3-clock": // a clock at 9:47, its marks and hands; the hour laid out straight under it: 10 by 6
             func ring(_ cx: Double, _ cy: Double, _ r: Double) -> [CGPoint] { (0...32).map { k in let a = Double(k) / 32 * 2 * .pi; return P(cx + r * cos(a), cy + r * sin(a)) } }
             var out: [[CGPoint]] = [ring(5, 2.2, 2.2), line((5, 2.2), (5 + 1.8 * sin(4.92), 2.2 - 1.8 * cos(4.92))), line((5, 2.2), (5 + 1.1 * sin(5.1), 2.2 - 1.1 * cos(5.1)))]
@@ -732,6 +749,26 @@ extension Piece {
         case "g3-fraccompare": // fourths over eighths, 3/4 shaded over 5/8, the shading's end dropped dashed: 8 by 6
             var out: [[CGPoint]] = bar(0, 0, 8, 4) + bar(0, 3, 8, 8)
             out.append(line((6, 5.5), (6, 6)))
+            return out
+        case "g3-graphs": // three bars over a scale whose lines are every 2, a line dropped from one's end: 10 by 6
+            var out: [[CGPoint]] = []
+            for (r, n) in [7.0, 4.0, 5.0].enumerated() { out.append(box(0, 1 + 1.6 * Double(r), n, 1.2)) }
+            out.append(line((0, 0.5), (0, 5.8))); out.append(line((0, 5.8), (10, 5.8)))
+            for x in stride(from: 2.0, through: 10, by: 2) { out.append(line((x, 0.5), (x, 5.8))) }
+            for y in stride(from: 2.4, to: 5.8, by: 0.4) { out.append(line((7, y), (7, y + 0.2))) }
+            return out
+        case "g3-drawgraph": // two bars made to their numbers and ticked, the third dragged out by its edge: 10 by 6
+            var out: [[CGPoint]] = [box(0, 1, 6, 1.2), box(0, 2.6, 3, 1.2), box(0, 4.2, 4.5, 1.2)]
+            out.append(line((0, 0.5), (0, 5.8))); out.append(line((0, 5.8), (10, 5.8)))
+            for x in stride(from: 2.0, through: 10, by: 2) { out.append(line((x, 5.8), (x, 6.1))) }
+            out.append(line((6.4, 1.6), (6.7, 1.9), (7.3, 1.2))); out.append(line((3.4, 3.2), (3.7, 3.5), (4.3, 2.8)))
+            out.append((0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(4.5 + 0.3 * cos(a), 4.8 + 0.3 * sin(a)) })
+            return out
+        case "g3-lineplot": // a crayon on a ruler marked in fourths, the fourths past 2 hopped: 10 by 6
+            var out: [[CGPoint]] = [box(0, 4, 10, 2)]
+            for i in 0...13 { let x = Double(i) * 0.75, h = i % 4 == 0 ? 1.0 : (i % 2 == 0 ? 0.7 : 0.4); out.append(line((x, 4), (x, 4 + h))) }
+            out.append(line((0, 2.6), (6.6, 2.6), (7.5, 3.2), (6.6, 3.8), (0, 3.8), (0, 2.6)))
+            out.append(arc(6, 6.75, 2.6, 0.7)); out.append(arc(6.75, 7.5, 2.6, 0.7))
             return out
         case "g3-split", "g3-three", "g3-double", "g3-mult10":
             func dot(_ x: Double, _ y: Double, _ r: Double = 0.35) -> [CGPoint] { (0...16).map { k in let a = Double(k) / 16 * 2 * .pi; return P(x + r * cos(a), y + r * sin(a)) } }

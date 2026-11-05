@@ -580,7 +580,7 @@ public enum Lessons {
         // 3rd grade, Fractions (4 Nov 2026)
         ShapeParts3.spec, UnitFrac3.spec, FracLine3.spec, Equiv3.spec, Compare3.spec,
         // 3rd grade, Time and measuring (4 Nov 2026)
-        Clock3.spec, Elapsed3.spec,
+        Clock3.spec, Elapsed3.spec, Mass3.spec, Liters3.spec,
     ]
     public static func spec(_ id: String) -> LessonSpec? { all.first { $0.id == id } }
 }

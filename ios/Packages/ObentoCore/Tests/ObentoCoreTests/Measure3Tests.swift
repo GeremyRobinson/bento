@@ -187,9 +187,9 @@ final class Measure3Tests: XCTestCase {
 
     func testLitersJug() {
         let P = Liters3.Parts(Liters3.jug(cap: 10, step: 2, value: 8))
-        XCTAssertEqual([P.n, P.every, P.marks, P.per], [5, 1, 4, 4])
+        XCTAssertEqual([P.n, P.every, P.marks, P.per], [5, 1, 4, 3])
         var l = LessonRun(Liters3.spec, numbers: Liters3.jug(cap: 10, step: 2, value: 8))
-        XCTAssertEqual(l.words.say, "Hop up from 0 to the first label. 1 liter is 4 squares tall here.")
+        XCTAssertEqual(l.words.say, "Hop up from 0 to the first label. 1 liter is 3 squares tall here.")
         XCTAssertEqual(move(&l, ["f": 2]), .notYet("That's past the first label."))
         XCTAssertEqual(move(&l, ["f": 1]), .moved(1))
         XCTAssertEqual(move(&l, ["s": 1]), .notYet("The marks jump by 2 each, not 1. Look at the labels."))
