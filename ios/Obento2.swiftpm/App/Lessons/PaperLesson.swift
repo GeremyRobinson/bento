@@ -306,6 +306,7 @@ enum PaperLessons {
         // 2nd grade, Time and money (4 Nov 2026)
         case "g2-time5": return Time5Lesson()
         case "g2-coins": return Coins2Lesson()
+        case "g2-money": return Money2Lesson()
         default: return nil
         }
     }

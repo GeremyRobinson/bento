@@ -17,17 +17,35 @@ enum TMK {
             : .hex(Ink.mix(0xF3F2EF, 0x8C8C96, 0.16), Ink.mix(0x121211, 0xC8C8D2, 0.14))
     }
     /// A coin `c` centred at (cx, cy), r squares across its middle to the rim.
-    static func coin(_ pen: inout GridPen, _ id: String, _ c: Int, cx: Double, cy: Double, r: Double, side: Int, rim: Sketch.Colour = .ink) {
+    /// `under`: the coin lying over this one in a fanned row (its centre and radius): only what shows past it is drawn.
+    static func coin(_ pen: inout GridPen, _ id: String, _ c: Int, cx: Double, cy: Double, r: Double, side: Int, rim: Sketch.Colour = .ink,
+                     under: (x: Double, y: Double, r: Double)? = nil) {
         let C = TM2.coins[c], ri = r - max(0.5, r * 0.1)
+        func shows(_ x: Double, _ y: Double) -> Bool { under.map { hypot(x - $0.x, y - $0.y) > $0.r } ?? true }
+        // a ring in the runs of it that show
+        func arcs(_ key: String, _ rr: Double, _ colour: Sketch.Colour) {
+            var run: [(Double, Double)] = [], k = 0
+            for p in ring(cx, cy, rr, 96) {
+                if shows(p.0, p.1) { run.append(p); continue }
+                if run.count > 1 { pen.line("\(key)\(k)", run, colour); k += 1 }
+                run = []
+            }
+            if run.count > 1 { pen.line("\(key)\(k)", run, colour) }
+        }
         pen.sketch.polygon(id + "f", ring(cx, cy, r).map { pen.P($0.0, $0.1) }, colour(c))
-        pen.line(id + "r\(rim)", ring(cx, cy, r), rim)
-        pen.line(id + "i", ring(cx, cy, ri))
+        if under == nil { pen.line(id + "r\(rim)", ring(cx, cy, r), rim); pen.line(id + "i", ring(cx, cy, ri)) }
+        else { arcs(id + "r\(rim)", r, rim); arcs(id + "i", ri, .ink) }
         if C.bumpy {
             let n = Int((2 * .pi * r / 0.6).rounded())
             var segs: [(CGPoint, CGPoint)] = []
-            for j in 0..<n { let a = 2 * .pi * Double(j) / Double(n); segs.append((pen.P(cx + ri * cos(a), cy + ri * sin(a)), pen.P(cx + r * cos(a), cy + r * sin(a)))) }
-            pen.sketch.segments(id + "e", segs, .ink, width: Sketch.stroke)
+            for j in 0..<n {
+                let a = 2 * .pi * Double(j) / Double(n)
+                if shows(cx + r * cos(a), cy + r * sin(a)) { segs.append((pen.P(cx + ri * cos(a), cy + ri * sin(a)), pen.P(cx + r * cos(a), cy + r * sin(a)))) }
+            }
+            if !segs.isEmpty { pen.sketch.segments(id + "e", segs, .ink, width: Sketch.stroke) }
         }
+        // the face's art only on a coin nothing lies over
+        guard under == nil else { return }
         let k = r * 0.42
         if side == 0 {
             var star: [(Double, Double)] = []
