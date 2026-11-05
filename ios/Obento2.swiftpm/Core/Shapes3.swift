@@ -542,8 +542,8 @@ public enum Perim3 {
         public func label(_ k: Int) -> String { given[k] ? "\(S[k]) cm" : "\(S[k]) cm, like the \(kind == 0 ? ["top", "right"][max(0, k - 2)] : "top")" }
         /// Squares to a centimetre: 3, or 2 for a big shape.
         public var cell: Int {
-            if kind == 2 { return a <= 12 && max(b, c) <= 9 ? 3 : 2 }
-            return a <= 12 && b <= 8 ? 3 : 2
+            if kind == 2 { return a <= 8 && max(b, c) <= 7 ? 3 : 2 }
+            return a <= 8 && b <= 6 ? 3 : 2
         }
         /// The steps' "at" codes.
         public var stages: [Int] { kind == 1 ? [2, 3, 4] : [0, 1, 2, 3, 4] }

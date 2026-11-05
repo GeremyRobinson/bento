@@ -327,11 +327,11 @@ enum PaperLessons {
         case "g3-addsub": return AddSub3Lesson()
         case "g3-estimate": return Estimate3Lesson()
         // 3rd grade, Shapes and area (4 Nov 2026)
-//        case "g3-quads": return Quads3Lesson()
+        case "g3-quads": return Quads3Lesson()
         case "g3-area": return Area3Lesson()
-//        case "g3-lshape": return LShape3Lesson()
-//        case "g3-perim": return Perim3Lesson()
-//        case "g3-perimarea": return PerimArea3Lesson()
+        case "g3-lshape": return LShape3Lesson()
+        case "g3-perim": return Perim3Lesson()
+        case "g3-perimarea": return PerimArea3Lesson()
         default: return nil
         }
     }

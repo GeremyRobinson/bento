@@ -11,6 +11,7 @@ import SwiftUI
 struct Area3Lesson: PaperLesson {
     private func at(_ s: PaperState) -> Int { Int((s.picture["at"] ?? 0).rounded()) }
     static let X0 = 5.0, Y0 = 3.0
+    func messageRows(_ n: Numbers) -> Int { 2 }
 
     func draw(_ s: PaperState) -> PaperDrawing {
         let P = Area3.Parts(s.numbers), st = at(s), X0 = Self.X0, Y0 = Self.Y0, L = Double(P.l), H = Double(P.w)

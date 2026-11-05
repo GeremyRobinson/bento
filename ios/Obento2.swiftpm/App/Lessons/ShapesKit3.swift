@@ -29,10 +29,10 @@ enum S3P {
         if !segs.isEmpty { pen.sketch.segments("\(id)\(p)x\(q)", segs, .ink, width: Sketch.stroke) }
     }
     /// A record line of words (the quadrilateral's "2 square corners"), its number then its words.
-    static func wordLine(_ pen: inout GridPen, _ id: String, _ n: Int?, _ words: String, colour: Sketch.Colour = .ink, line: Double) {
+    static func wordLine(_ pen: inout GridPen, _ id: String, _ n: Int?, _ words: String, colour: Sketch.Colour = .ink, x: Double = 0, line: Double) {
         var toks: [M7.Tok] = []
         if let n { toks.append(.n(n)) }
         toks.append(.w(words, colour))
-        M7.row(&pen, id, toks, x: 0, line: line)
+        M7.row(&pen, id, toks, x: x, line: line)
     }
 }
